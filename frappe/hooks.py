@@ -88,10 +88,14 @@ calendars = ["Event"]
 on_session_creation = [
 	"frappe.core.doctype.activity_log.feed.login_feed",
 	"frappe.core.doctype.user.user.notify_admin_access_to_system_manager",
+	"frappe.multi_tenancy.session_hooks.on_session_creation",
 ]
 
 on_login = "frappe.desk.doctype.note.note._get_unseen_notes"
-on_logout = "frappe.core.doctype.session_default_settings.session_default_settings.clear_session_defaults"
+on_logout = [
+	"frappe.core.doctype.session_default_settings.session_default_settings.clear_session_defaults",
+	"frappe.multi_tenancy.session_hooks.on_logout",
+]
 
 # PDF
 pdf_header_html = "frappe.utils.pdf.pdf_header_html"
@@ -466,6 +470,7 @@ after_job = [
 extend_bootinfo = [
 	"frappe.utils.telemetry.add_bootinfo",
 	"frappe.core.doctype.user_permission.user_permission.send_user_permissions",
+	"frappe.multi_tenancy.boot.extend_bootinfo",
 ]
 
 get_changelog_feed = "frappe.desk.doctype.changelog_feed.changelog_feed.get_feed"

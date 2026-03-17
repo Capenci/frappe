@@ -73,6 +73,15 @@ import frappe.website.website_generator  # web page doctypes
 Request.max_form_memory_size = None
 
 
+def _cleanup_tenant():
+	"""Clean up tenant context after response."""
+	try:
+		from frappe.multi_tenancy.tenant_manager import cleanup_tenant_context
+		cleanup_tenant_context()
+	except Exception:
+		pass
+
+
 def after_response_wrapper(app):
 	"""Wrap a WSGI application to call after_response hooks after we have responded.
 
@@ -86,6 +95,7 @@ def after_response_wrapper(app):
 				frappe.rate_limiter.update,
 				frappe.recorder.dump,
 				frappe.request.after_response.run,
+				_cleanup_tenant,
 				frappe.destroy,
 			),
 		)
@@ -182,6 +192,13 @@ def init_request(request):
 		raise NotFound
 
 	frappe.connect(set_admin_as_user=False)
+
+	# Multi-tenancy Phase 1: resolve tenant from header/cookie/domain (before auth)
+	from frappe.multi_tenancy.tenant_manager import resolve_tenant, set_current_tenant
+	tenant = resolve_tenant(request)
+	if tenant:
+		set_current_tenant(tenant)
+
 	if frappe.local.conf.maintenance_mode:
 		if frappe.local.conf.allow_reads_during_maintenance:
 			setup_read_only_mode()
@@ -198,6 +215,10 @@ def init_request(request):
 
 	if request.method != "OPTIONS":
 		frappe.local.http_request = HTTPRequest()
+
+	# Multi-tenancy Phase 2: refine tenant after auth (user defaults, session)
+	from frappe.multi_tenancy.tenant_manager import set_tenant_after_auth
+	set_tenant_after_auth()
 
 	for before_request_task in frappe.get_hooks("before_request"):
 		frappe.call(before_request_task)
@@ -254,6 +275,12 @@ def process_response(response: Response):
 
 	if trace_id := frappe.monitor.get_trace_id():
 		response.headers.update({"X-Frappe-Request-Id": trace_id})
+
+	# Multi-tenancy: include current tenant in response header
+	from frappe.multi_tenancy.tenant_manager import get_current_tenant
+	current_tenant = get_current_tenant()
+	if current_tenant:
+		response.headers["X-Frappe-Tenant"] = current_tenant
 
 	# CORS headers
 	if hasattr(frappe.local, "conf"):

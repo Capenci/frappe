@@ -90,6 +90,31 @@ frappe.ui.SidebarHeader = class SidebarHeader {
 					is_divider: true,
 				},
 				{
+					name: "switch-tenant",
+					label: "Switch Tenant",
+					icon: "repeat",
+					condition: function () {
+						return (
+							frappe.multi_tenancy &&
+							frappe.multi_tenancy.is_enabled() &&
+							frappe.multi_tenancy.get_tenants().length > 1
+						);
+					},
+					onClick: function () {
+						new frappe.multi_tenancy.TenantSwitcher();
+					},
+				},
+				{
+					is_divider: true,
+					condition: function () {
+						return (
+							frappe.multi_tenancy &&
+							frappe.multi_tenancy.is_enabled() &&
+							frappe.multi_tenancy.get_tenants().length > 1
+						);
+					},
+				},
+				{
 					name: "logout",
 					label: "Logout",
 					icon: "logout",

@@ -165,6 +165,24 @@
 		}
 		@include transition(all, 0.3s, cubic-bezier(0.4, 0, 0.2, 1));
 	}
+
+	.tenant-switcher-container {
+		.tenant-switch-link {
+			text-decoration: none;
+			font-size: var(--text-sm);
+			color: var(--text-color);
+			display: flex;
+			align-items: center;
+			&:hover {
+				background-color: var(--bg-light-gray);
+			}
+			svg {
+				margin: 0px;
+				flex: 0 0 auto;
+			}
+		}
+	}
+
 	.nav-item {
 		margin-left: -5px;
 	}

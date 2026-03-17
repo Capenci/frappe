@@ -1,0 +1,165 @@
+{
+ "actions": [],
+ "autoname": "field:tenant_name",
+ "creation": "2024-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "tenant_name",
+  "title",
+  "enabled",
+  "column_break_1",
+  "isolation_mode",
+  "section_break_db",
+  "db_host",
+  "db_port",
+  "db_name",
+  "db_user",
+  "db_password",
+  "column_break_db",
+  "schema_name",
+  "section_break_info",
+  "description",
+  "domain",
+  "column_break_info",
+  "default_for_site"
+ ],
+ "fields": [
+  {
+   "fieldname": "tenant_name",
+   "fieldtype": "Data",
+   "label": "Tenant Name",
+   "reqd": 1,
+   "unique": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "label": "Display Title",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "isolation_mode",
+   "fieldtype": "Select",
+   "label": "Isolation Mode",
+   "options": "\nschema\ndatabase",
+   "description": "schema: separate schema in same DB server. database: completely separate database.",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_db",
+   "fieldtype": "Section Break",
+   "label": "Database Configuration",
+   "depends_on": "eval:doc.isolation_mode=='database'"
+  },
+  {
+   "fieldname": "db_host",
+   "fieldtype": "Data",
+   "label": "Database Host",
+   "depends_on": "eval:doc.isolation_mode=='database'"
+  },
+  {
+   "fieldname": "db_port",
+   "fieldtype": "Int",
+   "label": "Database Port",
+   "depends_on": "eval:doc.isolation_mode=='database'"
+  },
+  {
+   "fieldname": "db_name",
+   "fieldtype": "Data",
+   "label": "Database Name",
+   "depends_on": "eval:doc.isolation_mode=='database'",
+   "mandatory_depends_on": "eval:doc.isolation_mode=='database'"
+  },
+  {
+   "fieldname": "db_user",
+   "fieldtype": "Data",
+   "label": "Database User",
+   "depends_on": "eval:doc.isolation_mode=='database'"
+  },
+  {
+   "fieldname": "db_password",
+   "fieldtype": "Password",
+   "label": "Database Password",
+   "depends_on": "eval:doc.isolation_mode=='database'"
+  },
+  {
+   "fieldname": "column_break_db",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "schema_name",
+   "fieldtype": "Data",
+   "label": "Schema Name",
+   "depends_on": "eval:doc.isolation_mode=='schema'",
+   "mandatory_depends_on": "eval:doc.isolation_mode=='schema'",
+   "description": "The database schema/prefix for this tenant's tables"
+  },
+  {
+   "fieldname": "section_break_info",
+   "fieldtype": "Section Break",
+   "label": "Details"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  },
+  {
+   "fieldname": "domain",
+   "fieldtype": "Data",
+   "label": "Domain",
+   "description": "If set, requests from this domain will resolve to this tenant"
+  },
+  {
+   "fieldname": "column_break_info",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "default_for_site",
+   "fieldtype": "Check",
+   "label": "Default Tenant",
+   "description": "If checked, this is the default tenant for the site"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2024-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Multi Tenancy",
+ "name": "Tenant",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "export": 1,
+   "read": 1,
+   "role": "Administrator",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "System Manager",
+   "write": 1,
+   "create": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

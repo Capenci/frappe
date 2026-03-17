@@ -533,7 +533,7 @@ def get_all_perms(role):
 
 
 def get_roles(user=None, with_standard=True):
-	"""get roles of current user"""
+	"""get roles of current user, optionally scoped by current tenant"""
 	if not user:
 		user = frappe.session.user
 
@@ -562,11 +562,44 @@ def get_roles(user=None, with_standard=True):
 
 	roles = frappe.cache.hget("roles", user, get)
 
+	# Apply tenant-scoped role filtering
+	roles = _apply_tenant_role_filter(user, roles)
+
 	# filter standard if required
 	if not with_standard:
 		roles = [r for r in roles if r not in AUTOMATIC_ROLES]
 
 	return roles
+
+
+def _apply_tenant_role_filter(user, global_roles):
+	"""If multi-tenancy is enabled and the tenant user has explicit roles,
+	restrict to only those roles (plus automatic roles)."""
+	from frappe.multi_tenancy.tenant_manager import (
+		get_current_tenant,
+		get_tenant_roles,
+		is_multi_tenancy_enabled,
+	)
+
+	if not is_multi_tenancy_enabled():
+		return global_roles
+
+	tenant = get_current_tenant()
+	if not tenant:
+		return global_roles
+
+	if user in ("Guest", "Administrator"):
+		return global_roles
+
+	tenant_roles = get_tenant_roles(user, tenant)
+	if not tenant_roles:
+		# No explicit tenant roles → user keeps their global roles
+		return global_roles
+
+	# Intersect: user must have the role globally AND it must be in tenant roles
+	auto = set(AUTOMATIC_ROLES)
+	filtered = [r for r in global_roles if r in tenant_roles or r in auto]
+	return filtered
 
 
 def get_doctype_roles(doctype, access_type="read"):
