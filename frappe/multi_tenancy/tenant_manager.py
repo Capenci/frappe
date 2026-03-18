@@ -192,10 +192,44 @@ def _switch_to_tenant_schema(tenant: dict) -> None:
 		frappe.local.tenant_schema = schema_name
 
 
+class _MainDBContext:
+	"""Context manager that temporarily switches back to the main DB schema.
+
+	For schema isolation the same connection is reused, so ``main_db`` and
+	``db`` reference the same object.  This context manager switches back
+	with ``USE <main_db>`` before executing and restores afterwards.
+	"""
+
+	def __enter__(self):
+		self.tenant_schema = getattr(frappe.local, "tenant_schema", None)
+		if self.tenant_schema:
+			frappe.db.sql(f"USE `{frappe.conf.db_name}`")
+		return frappe.local.db
+
+	def __exit__(self, *exc):
+		if self.tenant_schema:
+			frappe.db.sql(f"USE `{self.tenant_schema}`")
+
+
+def main_db_context():
+	"""Return a context manager that ensures queries run against the main DB.
+
+	Usage::
+
+		with main_db_context() as db:
+			db.get_all("Tenant User", ...)
+	"""
+	return _MainDBContext()
+
+
 def get_main_db():
 	"""Return the main (non-tenant) database connection.
 
 	Useful for queries on shared tables (Tenant, Tenant User, User).
+
+	**Note:** For schema isolation the returned connection is the *same*
+	object as ``frappe.db`` – use :func:`main_db_context` instead when
+	you need to guarantee the main schema is active.
 	"""
 	return getattr(frappe.local, "main_db", frappe.local.db)
 
@@ -207,20 +241,20 @@ def get_main_db():
 def _get_tenant_doc(tenant_name: str) -> dict:
 	"""Get tenant document as dict, using main DB."""
 	def _fetch():
-		db = get_main_db()
-		doc = db.get_value(
-			"Tenant",
-			tenant_name,
-			[
-				"name", "tenant_name", "title", "enabled", "isolation_mode",
-				"db_host", "db_port", "db_name", "db_user", "db_password",
-				"schema_name", "domain", "default_for_site",
-			],
-			as_dict=True,
-		)
-		if not doc:
-			frappe.throw(_("Tenant {0} does not exist").format(tenant_name), frappe.DoesNotExistError)
-		return doc
+		with main_db_context() as db:
+			doc = db.get_value(
+				"Tenant",
+				tenant_name,
+				[
+					"name", "tenant_name", "title", "enabled", "isolation_mode",
+					"db_host", "db_port", "db_name", "db_user", "db_password",
+					"schema_name", "domain", "default_for_site",
+				],
+				as_dict=True,
+			)
+			if not doc:
+				frappe.throw(_("Tenant {0} does not exist").format(tenant_name), frappe.DoesNotExistError)
+			return doc
 
 	return frappe.cache.hget("tenant_doc", tenant_name, _fetch)
 
@@ -237,8 +271,8 @@ def _is_valid_tenant(tenant_name: str) -> bool:
 def _get_default_tenant() -> str | None:
 	"""Get the default tenant for the current site."""
 	def _fetch():
-		db = get_main_db()
-		return db.get_value("Tenant", {"default_for_site": 1, "enabled": 1}, "name") or None
+		with main_db_context() as db:
+			return db.get_value("Tenant", {"default_for_site": 1, "enabled": 1}, "name") or None
 
 	return frappe.cache.get_value("default_tenant", _fetch)
 
@@ -246,12 +280,12 @@ def _get_default_tenant() -> str | None:
 def _get_tenant_for_domain(domain: str) -> str | None:
 	"""Look up tenant by domain."""
 	def _fetch():
-		db = get_main_db()
-		mapping = {}
-		for t in db.get_all("Tenant", filters={"enabled": 1, "domain": ("is", "set")}, fields=["name", "domain"]):
-			if t.domain:
-				mapping[t.domain.lower()] = t.name
-		return mapping
+		with main_db_context() as db:
+			mapping = {}
+			for t in db.get_all("Tenant", filters={"enabled": 1, "domain": ("is", "set")}, fields=["name", "domain"]):
+				if t.domain:
+					mapping[t.domain.lower()] = t.name
+			return mapping
 
 	domain_map = frappe.cache.get_value("tenant_domain_map", _fetch)
 	return domain_map.get(domain.lower())
@@ -267,12 +301,12 @@ def get_user_tenants(user: str) -> list[dict]:
 	Returns: [{"tenant": "...", "title": "...", "is_default": 0/1, "roles": "..."}]
 	"""
 	def _fetch():
-		db = get_main_db()
-		return db.get_all(
-			"Tenant User",
-			filters={"user": user, "enabled": 1},
-			fields=["tenant", "is_default", "roles"],
-		)
+		with main_db_context() as db:
+			return db.get_all(
+				"Tenant User",
+				filters={"user": user, "enabled": 1},
+				fields=["tenant", "is_default", "roles"],
+			)
 
 	tenant_users = frappe.cache.hget("user_tenants", user, _fetch)
 

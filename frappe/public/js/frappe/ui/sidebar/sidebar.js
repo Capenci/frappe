@@ -341,6 +341,33 @@ frappe.ui.Sidebar = class Sidebar {
 		this.wrapper.find(".overlay").on("click", () => {
 			this.close();
 		});
+
+		this.setup_tenant_selector();
+	}
+
+	setup_tenant_selector() {
+		let $select = this.wrapper.find(".tenant-select");
+		if (!$select.length) return;
+
+		$select.on("change", function () {
+			let tenant = $(this).val();
+			let current = frappe.multi_tenancy.get_current();
+			if (tenant === current) return;
+
+			frappe.show_alert({ message: __("Switching tenant..."), indicator: "blue" });
+			frappe.xcall("frappe.multi_tenancy.api.switch_tenant", {
+				tenant_name: tenant,
+			}).then((r) => {
+				if (r && r.success) {
+					document.cookie = `frappe_tenant=${tenant};path=/;SameSite=Lax`;
+					setTimeout(() => window.location.reload(), 300);
+				}
+			}).catch(() => {
+				frappe.show_alert({ message: __("Failed to switch tenant"), indicator: "red" });
+				// Revert select to current value
+				$select.val(current);
+			});
+		});
 	}
 
 	set_active_workspace_item() {

@@ -10,14 +10,14 @@
   "enabled",
   "column_break_1",
   "isolation_mode",
+  "section_break_schema",
+  "schema_name",
   "section_break_db",
   "db_host",
   "db_port",
   "db_name",
   "db_user",
   "db_password",
-  "column_break_db",
-  "schema_name",
   "section_break_info",
   "description",
   "domain",
@@ -58,6 +58,20 @@
    "reqd": 1
   },
   {
+   "fieldname": "section_break_schema",
+   "fieldtype": "Section Break",
+   "label": "Schema Configuration",
+   "depends_on": "eval:doc.isolation_mode=='schema'"
+  },
+  {
+   "fieldname": "schema_name",
+   "fieldtype": "Data",
+   "label": "Schema Name",
+   "depends_on": "eval:doc.isolation_mode=='schema'",
+   "mandatory_depends_on": "eval:doc.isolation_mode=='schema'",
+   "description": "The database schema/prefix for this tenant's tables"
+  },
+  {
    "fieldname": "section_break_db",
    "fieldtype": "Section Break",
    "label": "Database Configuration",
@@ -94,18 +108,7 @@
    "label": "Database Password",
    "depends_on": "eval:doc.isolation_mode=='database'"
   },
-  {
-   "fieldname": "column_break_db",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "schema_name",
-   "fieldtype": "Data",
-   "label": "Schema Name",
-   "depends_on": "eval:doc.isolation_mode=='schema'",
-   "mandatory_depends_on": "eval:doc.isolation_mode=='schema'",
-   "description": "The database schema/prefix for this tenant's tables"
-  },
+
   {
    "fieldname": "section_break_info",
    "fieldtype": "Section Break",

@@ -370,11 +370,8 @@ def _install_schema_in_tenant_db(tenant):
 	frappe.local.db = tenant_db
 
 	try:
-		from frappe.installer import install_db
-		# Sync all doctypes to create tables
-		from frappe.modules.utils import sync_for
-		for app in frappe.get_installed_apps():
-			sync_for(app, force=True, reset_permissions=True)
+		# Copy table structures from main DB
+		_copy_tables_mariadb(frappe.conf.db_name, tenant.db_name)
 		frappe.db.commit()
 	finally:
 		frappe.local.db = original_db
@@ -382,28 +379,79 @@ def _install_schema_in_tenant_db(tenant):
 
 
 def _install_schema_in_tenant_schema(tenant):
-	"""Install frappe tables in a tenant's schema."""
-	from frappe.multi_tenancy.tenant_manager import _switch_to_tenant_schema
+	"""Install frappe tables in a tenant's schema by copying table structure from the main database."""
+	db_type = frappe.conf.get("db_type", "mariadb")
+	main_db = frappe.conf.db_name
+	schema_name = tenant.schema_name
 
-	original_schema = getattr(frappe.local, "tenant_schema", None)
-	_switch_to_tenant_schema({"schema_name": tenant.schema_name, "isolation_mode": "schema"})
+	if db_type == "postgres":
+		# PostgreSQL: copy tables via pg_dump --schema-only or CREATE TABLE LIKE
+		_copy_tables_postgres(main_db, schema_name)
+	else:
+		# MariaDB: copy table structures from main DB to tenant DB
+		_copy_tables_mariadb(main_db, schema_name)
 
-	try:
-		from frappe.modules.utils import sync_for
-		for app in frappe.get_installed_apps():
-			sync_for(app, force=True, reset_permissions=True)
-		frappe.db.commit()
-	finally:
-		# Switch back
-		db_type = frappe.conf.get("db_type", "mariadb")
-		if db_type == "postgres":
-			frappe.db.sql("SET search_path TO public")
-		else:
-			frappe.db.sql(f"USE `{frappe.conf.db_name}`")
-		if original_schema:
-			frappe.local.tenant_schema = original_schema
-		elif hasattr(frappe.local, "tenant_schema"):
-			del frappe.local.tenant_schema
+
+def _copy_tables_mariadb(main_db, tenant_db):
+	"""Copy all table structures AND data from main DB to tenant DB (MariaDB)."""
+	# Get all tables from the main database
+	tables = frappe.db.sql(
+		"SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = %s AND TABLE_TYPE = 'BASE TABLE'",
+		(main_db,),
+		as_list=True,
+	)
+
+	if not tables:
+		click.secho("No tables found in main database to copy", fg="yellow")
+		return
+
+	# Switch to tenant DB
+	frappe.db.sql(f"USE `{tenant_db}`")
+
+	for (table_name,) in tables:
+		try:
+			# Get CREATE TABLE statement from main DB
+			create_stmt = frappe.db.sql(
+				f"SHOW CREATE TABLE `{main_db}`.`{table_name}`", as_list=True
+			)
+			if create_stmt:
+				create_sql = create_stmt[0][1]
+				# Execute in tenant DB (tables will be created in current USE'd DB)
+				frappe.db.sql_ddl(f"DROP TABLE IF EXISTS `{table_name}`")
+				frappe.db.sql_ddl(create_sql)
+				# Copy data from main DB to tenant DB
+				try:
+					frappe.db.sql(
+						f"INSERT INTO `{tenant_db}`.`{table_name}` SELECT * FROM `{main_db}`.`{table_name}`"
+					)
+				except Exception as data_err:
+					click.secho(f"  Warning: could not copy data for {table_name}: {data_err}", fg="yellow")
+		except Exception as e:
+			click.secho(f"  Warning: could not copy table {table_name}: {e}", fg="yellow")
+
+	frappe.db.commit()
+
+	# Switch back to main DB
+	frappe.db.sql(f"USE `{frappe.conf.db_name}`")
+
+
+def _copy_tables_postgres(main_db, schema_name):
+	"""Copy all table structures from public schema to tenant schema (PostgreSQL)."""
+	tables = frappe.db.sql(
+		"SELECT tablename FROM pg_tables WHERE schemaname = 'public'",
+		as_list=True,
+	)
+
+	for (table_name,) in tables:
+		try:
+			frappe.db.sql_ddl(
+				f'CREATE TABLE IF NOT EXISTS "{schema_name}"."{table_name}" '
+				f'(LIKE "public"."{table_name}" INCLUDING ALL)'
+			)
+		except Exception as e:
+			click.secho(f"  Warning: could not copy table {table_name}: {e}", fg="yellow")
+
+	frappe.db.commit()
 
 
 def _update_site_config(site, updates):

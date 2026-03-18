@@ -16,6 +16,22 @@
 					</div>
 				</div>
 			</div>
+			{% if (frappe.multi_tenancy && frappe.multi_tenancy.is_enabled() && frappe.multi_tenancy.get_tenants().length >= 1) { %}
+			<div class="tenant-selector-bar" style="padding: 8px 12px; border-bottom: 1px solid var(--border-color);">
+				<div class="d-flex align-items-center" style="gap: 8px;">
+					<span class="sidebar-item-icon text-ink-gray-7" style="flex-shrink: 0;">
+						{%= frappe.utils.icon("building" , "sm", "", "", "text-ink-gray-7 current-color", true)%}
+					</span>
+					<select class="tenant-select form-control input-xs" style="height: 28px; font-size: var(--text-xs); padding: 2px 8px; flex: 1; min-width: 0;" title="{%= __('Switch Tenant') %}">
+						{% frappe.multi_tenancy.get_tenants().forEach(function(t) { %}
+						<option value="{%= t.tenant %}" {% if (t.tenant === frappe.multi_tenancy.get_current()) { %} selected {% } %}>
+							{%= t.title %}
+						</option>
+						{% }); %}
+					</select>
+				</div>
+			</div>
+			{% } %}
 			<div class="body-sidebar-top">
 				<div class="sidebar-items">
 				</div>
@@ -51,23 +67,7 @@
 					{%= frappe.utils.icon("panel-right-open" , "sm", "", "", "text-ink-gray-7 current-color", true)%}
 		 			<span> {%= __("Collapse") %} </span>
 				</a>
-				{% if (frappe.multi_tenancy && frappe.multi_tenancy.is_enabled() && frappe.multi_tenancy.get_tenants().length > 1) { %}
-				<div class="tenant-switcher-container mt-2 mb-1" style="padding: 0 var(--padding-sm);">
-					<a class="tenant-switch-link align-center btn-reset flex text-small"
-					   style="width: 100%; height: 32px; cursor: pointer; border-radius: var(--border-radius); padding: 4px 8px;"
-					   onclick="new frappe.multi_tenancy.TenantSwitcher()"
-					   title="{{ __('Switch Tenant') }}"
-					>
-						<span class="sidebar-item-icon text-ink-gray-7">
-							{%= frappe.utils.icon("repeat" , "sm", "", "", "text-ink-gray-7 current-color", true)%}
-						</span>
-						<span class="ml-2 text-truncate" style="flex: 1;">
-							{{ frappe.multi_tenancy.get_current() || __("Default") }}
-						</span>
-						<span class="text-muted text-xs">{{ __("Switch") }}</span>
-					</a>
-				</div>
-				{% } %}
+
 				<div class="nav-item dropdown dropdown-navbar-user dropdown-mobile mt-3">
 					<a
 						class="align-center btn-reset flex nav-link"
