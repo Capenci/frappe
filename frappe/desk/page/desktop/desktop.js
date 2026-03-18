@@ -285,6 +285,7 @@ class DesktopPage {
 		this.setup_notifications();
 		this.setup_navbar();
 		this.setup_awesomebar();
+		this.setup_tenant_selector();
 		this.handle_route_change();
 	}
 	setup_edit_button() {
@@ -453,6 +454,11 @@ class DesktopPage {
 				label: "Edit Profile",
 				url: `/desk/user/${frappe.session.user}`,
 			},
+			...(frappe.multi_tenancy && frappe.multi_tenancy.is_enabled() ? [{
+				icon: "users",
+				label: "Manage Tenants",
+				url: "/desk/tenant",
+			}] : []),
 			{
 				icon: is_dark ? "sun" : "moon",
 				label: "Toggle Theme",
@@ -507,6 +513,55 @@ class DesktopPage {
 	}
 	setup_navbar() {
 		$(".sticky-top > .navbar").hide();
+	}
+
+	setup_tenant_selector() {
+		let $container = $(".desktop-tenant-selector");
+		$container.empty();
+
+		if (!frappe.multi_tenancy || !frappe.multi_tenancy.is_enabled()) return;
+
+		let tenants = frappe.multi_tenancy.get_tenants();
+		if (!tenants || tenants.length < 1) return;
+
+		let current = frappe.multi_tenancy.get_current();
+		let options = tenants.map(t =>
+			`<option value="${t.tenant}" ${t.tenant === current ? 'selected' : ''}>${frappe.utils.escape_html(t.title)}</option>`
+		).join('');
+
+		let $wrapper = $(`
+			<div class="flex" style="align-items: center; gap: 8px;">
+				<svg class="icon icon-sm"><use href="#icon-users"></use></svg>
+				<select class="desktop-tenant-select form-control input-xs"
+					style="height: 28px; font-size: var(--text-sm); padding: 2px 8px; min-width: 120px; max-width: 200px;"
+					title="${__("Switch Tenant")}">
+					${options}
+				</select>
+				<a href="/desk/tenant" title="${__("Manage Tenants")}"
+					style="display: flex; align-items: center; color: var(--text-muted);">
+					<svg class="icon icon-sm"><use href="#icon-setting-gear"></use></svg>
+				</a>
+			</div>
+		`);
+
+		$container.append($wrapper);
+
+		$wrapper.find(".desktop-tenant-select").on("change", function () {
+			let tenant = $(this).val();
+			if (tenant === current) return;
+			frappe.show_alert({ message: __("Switching tenant..."), indicator: "blue" });
+			frappe.xcall("frappe.multi_tenancy.api.switch_tenant", {
+				tenant_name: tenant,
+			}).then((r) => {
+				if (r && r.success) {
+					document.cookie = `frappe_tenant=${tenant};path=/;SameSite=Lax`;
+					setTimeout(() => window.location.reload(), 300);
+				}
+			}).catch(() => {
+				frappe.show_alert({ message: __("Failed to switch tenant"), indicator: "red" });
+				$(this).val(current);
+			});
+		});
 	}
 
 	setup_awesomebar() {

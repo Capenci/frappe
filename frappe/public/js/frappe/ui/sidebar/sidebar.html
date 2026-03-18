@@ -29,6 +29,9 @@
 						</option>
 						{% }); %}
 					</select>
+					<a href="/desk/tenant" class="tenant-manage-link" title="{%= __('Manage Tenants') %}" style="flex-shrink: 0; display: flex; align-items: center; color: var(--text-muted);">
+						{%= frappe.utils.icon("setting-gear" , "sm", "", "", "text-ink-gray-7 current-color", true)%}
+					</a>
 				</div>
 			</div>
 			{% } %}

@@ -1,0 +1,21 @@
+{
+ "app": "frappe",
+ "creation": "2026-03-18 00:00:00.000000",
+ "docstatus": 0,
+ "doctype": "Desktop Icon",
+ "hidden": 0,
+ "icon": "building",
+ "icon_type": "Link",
+ "idx": 0,
+ "label": "Tenants",
+ "link_to": "Tenants",
+ "link_type": "Workspace Sidebar",
+ "modified": "2026-03-18 00:00:00.000000",
+ "modified_by": "Administrator",
+ "name": "Tenants",
+ "owner": "Administrator",
+ "parent_icon": "Framework",
+ "restrict_removal": 0,
+ "roles": [],
+ "standard": 1
+}
