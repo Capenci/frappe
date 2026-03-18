@@ -1,0 +1,157 @@
+{
+ "actions": [],
+ "autoname": "format:EXEC-{#####}",
+ "creation": "2025-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "playbook",
+  "status",
+  "column_break_header",
+  "trigger_type",
+  "trigger_doctype",
+  "trigger_docname",
+  "section_break_time",
+  "started_at",
+  "column_break_time",
+  "completed_at",
+  "section_break_input",
+  "input_data",
+  "section_break_results",
+  "step_results",
+  "section_break_error",
+  "error"
+ ],
+ "fields": [
+  {
+   "fieldname": "playbook",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Playbook",
+   "options": "SOAR Playbook",
+   "reqd": 1
+  },
+  {
+   "default": "Queued",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Queued\nRunning\nCompleted\nFailed\nCancelled",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "column_break_header",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "trigger_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Trigger Type",
+   "options": "Manual\nEvent\nScheduled",
+   "read_only": 1
+  },
+  {
+   "fieldname": "trigger_doctype",
+   "fieldtype": "Link",
+   "label": "Trigger DocType",
+   "options": "DocType",
+   "read_only": 1
+  },
+  {
+   "fieldname": "trigger_docname",
+   "fieldtype": "Data",
+   "label": "Trigger Document",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_time",
+   "fieldtype": "Section Break",
+   "label": "Timing"
+  },
+  {
+   "fieldname": "started_at",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Started At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_time",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "completed_at",
+   "fieldtype": "Datetime",
+   "label": "Completed At",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_input",
+   "fieldtype": "Section Break",
+   "label": "Input Data"
+  },
+  {
+   "fieldname": "input_data",
+   "fieldtype": "Code",
+   "label": "Input Data",
+   "options": "JSON",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_results",
+   "fieldtype": "Section Break",
+   "label": "Step Results"
+  },
+  {
+   "fieldname": "step_results",
+   "fieldtype": "Table",
+   "label": "Step Results",
+   "options": "SOAR Playbook Step Result",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_error",
+   "fieldtype": "Section Break",
+   "label": "Error"
+  },
+  {
+   "fieldname": "error",
+   "fieldtype": "Code",
+   "label": "Error",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2025-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Playbook",
+ "name": "SOAR Playbook Execution",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "SOAR Manager",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "SOAR Analyst"
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

@@ -1,0 +1,198 @@
+{
+ "actions": [],
+ "autoname": "format:INC-{#####}",
+ "creation": "2025-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "title",
+  "column_break_header",
+  "status",
+  "severity",
+  "lead",
+  "section_break_details",
+  "description",
+  "section_break_classification",
+  "incident_type",
+  "column_break_class",
+  "tags_list",
+  "section_break_cases",
+  "cases",
+  "section_break_sla",
+  "sla_policy",
+  "sla_response_deadline",
+  "column_break_sla",
+  "sla_resolution_deadline",
+  "sla_status"
+ ],
+ "fields": [
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Title",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_header",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "New",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "New\nOpen\nIn Progress\nContained\nEradicated\nRecovered\nClosed",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "default": "Medium",
+   "fieldname": "severity",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Severity",
+   "options": "Low\nMedium\nHigh\nCritical",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "lead",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Incident Lead",
+   "options": "User"
+  },
+  {
+   "fieldname": "section_break_details",
+   "fieldtype": "Section Break",
+   "label": "Details"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Text Editor",
+   "label": "Description"
+  },
+  {
+   "fieldname": "section_break_classification",
+   "fieldtype": "Section Break",
+   "label": "Classification"
+  },
+  {
+   "fieldname": "incident_type",
+   "fieldtype": "Data",
+   "label": "Incident Type"
+  },
+  {
+   "fieldname": "column_break_class",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Comma-separated tags",
+   "fieldname": "tags_list",
+   "fieldtype": "Small Text",
+   "label": "Tags"
+  },
+  {
+   "fieldname": "section_break_cases",
+   "fieldtype": "Section Break",
+   "label": "Linked Cases"
+  },
+  {
+   "fieldname": "cases",
+   "fieldtype": "Table",
+   "label": "Cases",
+   "options": "SOAR Incident Case"
+  },
+  {
+   "fieldname": "section_break_sla",
+   "fieldtype": "Section Break",
+   "label": "SLA"
+  },
+  {
+   "fieldname": "sla_policy",
+   "fieldtype": "Link",
+   "label": "SLA Policy",
+   "options": "SOAR SLA Policy",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sla_response_deadline",
+   "fieldtype": "Datetime",
+   "label": "Response Deadline",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_sla",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sla_resolution_deadline",
+   "fieldtype": "Datetime",
+   "label": "Resolution Deadline",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sla_status",
+   "fieldtype": "Select",
+   "label": "SLA Status",
+   "options": "\nWithin SLA\nWarning\nBreached",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [
+  {
+   "link_doctype": "SOAR Case",
+   "link_fieldname": "incident"
+  }
+ ],
+ "modified": "2025-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Incident Management",
+ "name": "SOAR Incident",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "SOAR Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "SOAR Analyst"
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "title",
+ "track_changes": 1
+}

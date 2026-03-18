@@ -1,0 +1,125 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2025-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "escalation_rule",
+  "reference_doctype",
+  "reference_name",
+  "column_break_1",
+  "action_taken",
+  "from_status",
+  "to_status",
+  "section_break_who",
+  "escalated_by",
+  "escalated_to",
+  "escalated_to_role",
+  "section_break_notes",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "escalation_rule",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Escalation Rule",
+   "options": "SOAR Escalation Rule"
+  },
+  {
+   "fieldname": "reference_doctype",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Reference DocType",
+   "options": "DocType"
+  },
+  {
+   "fieldname": "reference_name",
+   "fieldtype": "Dynamic Link",
+   "in_list_view": 1,
+   "label": "Reference Name",
+   "options": "reference_doctype"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "action_taken",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Action Taken",
+   "options": "Allowed\nDenied\nEscalated\nAuto-Escalated"
+  },
+  {
+   "fieldname": "from_status",
+   "fieldtype": "Data",
+   "label": "From Status"
+  },
+  {
+   "fieldname": "to_status",
+   "fieldtype": "Data",
+   "label": "To Status"
+  },
+  {
+   "fieldname": "section_break_who",
+   "fieldtype": "Section Break",
+   "label": "Escalation Details"
+  },
+  {
+   "fieldname": "escalated_by",
+   "fieldtype": "Link",
+   "label": "Escalated By",
+   "options": "User"
+  },
+  {
+   "fieldname": "escalated_to",
+   "fieldtype": "Link",
+   "label": "Escalated To",
+   "options": "User"
+  },
+  {
+   "fieldname": "escalated_to_role",
+   "fieldtype": "Link",
+   "label": "Escalated To Role",
+   "options": "Role"
+  },
+  {
+   "fieldname": "section_break_notes",
+   "fieldtype": "Section Break",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Text",
+   "label": "Notes"
+  }
+ ],
+ "in_create": 1,
+ "links": [],
+ "modified": "2025-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Escalation",
+ "name": "SOAR Escalation Log",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "read": 1,
+   "role": "System Manager"
+  },
+  {
+   "read": 1,
+   "role": "SOAR Manager"
+  },
+  {
+   "read": 1,
+   "role": "SOAR Analyst"
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0
+}

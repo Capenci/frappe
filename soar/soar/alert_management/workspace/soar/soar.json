@@ -1,0 +1,221 @@
+{
+ "app": "soar",
+ "charts": [
+  {
+   "chart_name": "Alert Trend",
+   "label": "Alert Trend"
+  }
+ ],
+ "content": "[{\"id\":\"soar_nc1\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Open Alerts\",\"col\":3}},{\"id\":\"soar_nc2\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Critical Alerts\",\"col\":3}},{\"id\":\"soar_nc3\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Open Cases\",\"col\":3}},{\"id\":\"soar_nc4\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Active Incidents\",\"col\":3}},{\"id\":\"soar_ch1\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Alert Trend\",\"col\":12}},{\"id\":\"soar_sc1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"SOAR Alert\",\"col\":3}},{\"id\":\"soar_sc2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"SOAR Case\",\"col\":3}},{\"id\":\"soar_sc3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"SOAR Incident\",\"col\":3}},{\"id\":\"soar_sc4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"SOAR Playbook\",\"col\":3}},{\"id\":\"soar_sp1\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"soar_cd1\",\"type\":\"card\",\"data\":{\"card_name\":\"Alert Management\",\"col\":4}},{\"id\":\"soar_cd2\",\"type\":\"card\",\"data\":{\"card_name\":\"Case & Incident\",\"col\":4}},{\"id\":\"soar_cd3\",\"type\":\"card\",\"data\":{\"card_name\":\"Automation & Configuration\",\"col\":4}}]",
+ "creation": "2024-01-01 00:00:00.000000",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "shield",
+ "idx": 0,
+ "is_hidden": 0,
+ "label": "SOAR",
+ "links": [
+  {
+   "description": "Manage security alerts from all sources",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Alert Management",
+   "link_count": 4,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "SOAR Alert",
+   "link_count": 0,
+   "link_to": "SOAR Alert",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "SIEM Integration",
+   "link_count": 0,
+   "link_to": "SOAR SIEM Integration",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Alert Summary Report",
+   "link_count": 0,
+   "link_to": "SOAR Alert Summary",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "SLA Compliance Report",
+   "link_count": 0,
+   "link_to": "SOAR SLA Compliance",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "description": "Investigate and respond to security incidents",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Case & Incident",
+   "link_count": 3,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "SOAR Case",
+   "link_count": 0,
+   "link_to": "SOAR Case",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "SOAR Incident",
+   "link_count": 0,
+   "link_to": "SOAR Incident",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Escalation Log",
+   "link_count": 0,
+   "link_to": "SOAR Escalation Log",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "description": "Configure automation rules, SLA policies, and playbooks",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Automation & Configuration",
+   "link_count": 4,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "SOAR Playbook",
+   "link_count": 0,
+   "link_to": "SOAR Playbook",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Playbook Executions",
+   "link_count": 0,
+   "link_to": "SOAR Playbook Execution",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Escalation Rules",
+   "link_count": 0,
+   "link_to": "SOAR Escalation Rule",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "SLA Policies",
+   "link_count": 0,
+   "link_to": "SOAR SLA Policy",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2024-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Alert Management",
+ "name": "SOAR",
+ "number_cards": [
+  {
+   "label": "Open Alerts",
+   "number_card_name": "Open Alerts"
+  },
+  {
+   "label": "Critical Alerts",
+   "number_card_name": "Critical Alerts"
+  },
+  {
+   "label": "Open Cases",
+   "number_card_name": "Open Cases"
+  },
+  {
+   "label": "Active Incidents",
+   "number_card_name": "Active Incidents"
+  }
+ ],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [
+  {
+   "role": "SOAR Manager"
+  },
+  {
+   "role": "SOAR Analyst"
+  }
+ ],
+ "sequence_id": 1.0,
+ "shortcuts": [
+  {
+   "color": "#FF5858",
+   "label": "SOAR Alert",
+   "link_to": "SOAR Alert",
+   "type": "DocType"
+  },
+  {
+   "color": "#FFA00A",
+   "label": "SOAR Case",
+   "link_to": "SOAR Case",
+   "type": "DocType"
+  },
+  {
+   "color": "#E24C4C",
+   "label": "SOAR Incident",
+   "link_to": "SOAR Incident",
+   "type": "DocType"
+  },
+  {
+   "color": "#29CD42",
+   "label": "SOAR Playbook",
+   "link_to": "SOAR Playbook",
+   "type": "DocType"
+  }
+ ],
+ "title": "SOAR"
+}

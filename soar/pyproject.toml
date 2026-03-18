@@ -1,0 +1,25 @@
+[project]
+name = "soar"
+authors = [
+    { name = "SOAR Team", email = "soar@example.com" }
+]
+description = "Security Orchestration, Automation and Response"
+requires-python = ">=3.10"
+readme = "README.md"
+dynamic = ["version"]
+dependencies = ["frappe"]
+
+[build-system]
+requires = ["flit_core >=3.4,<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.bench]
+app-name = "soar"
+app-title = "SOAR"
+app-publisher = "SOAR Team"
+app-description = "Security Orchestration, Automation and Response"
+app-email = "soar@example.com"
+app-color = "#e74c3c"
+app-icon = "shield"
+app-license = "MIT"
+required-apps = ["frappe"]

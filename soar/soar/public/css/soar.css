@@ -1,0 +1,16 @@
+/* SOAR App Styles */
+
+/* Severity badges */
+.soar-severity-critical { color: #fff; background-color: #e74c3c; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+.soar-severity-high { color: #fff; background-color: #e67e22; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+.soar-severity-medium { color: #fff; background-color: #f39c12; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+.soar-severity-low { color: #fff; background-color: #3498db; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+.soar-severity-info { color: #fff; background-color: #95a5a6; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+
+/* SLA status indicators */
+.soar-sla-ok { color: #27ae60; font-weight: bold; }
+.soar-sla-warning { color: #f39c12; font-weight: bold; }
+.soar-sla-breached { color: #e74c3c; font-weight: bold; }
+
+/* Playbook node styles */
+.soar-playbook-canvas { border: 1px solid var(--border-color); border-radius: 8px; min-height: 400px; background: var(--bg-color); }

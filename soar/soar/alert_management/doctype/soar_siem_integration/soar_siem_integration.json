@@ -1,0 +1,159 @@
+{
+ "actions": [],
+ "autoname": "Prompt",
+ "creation": "2025-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "enabled",
+  "siem_type",
+  "column_break_header",
+  "poll_interval_minutes",
+  "last_poll_at",
+  "section_break_connection",
+  "api_url",
+  "verify_ssl",
+  "column_break_conn",
+  "api_user",
+  "api_key",
+  "section_break_config",
+  "query_filter",
+  "column_break_config",
+  "severity_mapping",
+  "section_break_options",
+  "auto_create_alerts",
+  "default_alert_type"
+ ],
+ "fields": [
+  {
+   "default": "1",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Enabled"
+  },
+  {
+   "fieldname": "siem_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "SIEM Type",
+   "options": "Wazuh\nSplunk\nElastic\nQRadar\nOther",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_header",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "10",
+   "fieldname": "poll_interval_minutes",
+   "fieldtype": "Int",
+   "label": "Poll Interval (minutes)"
+  },
+  {
+   "fieldname": "last_poll_at",
+   "fieldtype": "Datetime",
+   "label": "Last Poll At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_connection",
+   "fieldtype": "Section Break",
+   "label": "Connection"
+  },
+  {
+   "fieldname": "api_url",
+   "fieldtype": "Data",
+   "label": "API URL",
+   "options": "URL",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "verify_ssl",
+   "fieldtype": "Check",
+   "label": "Verify SSL"
+  },
+  {
+   "fieldname": "column_break_conn",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "api_user",
+   "fieldtype": "Data",
+   "label": "API User"
+  },
+  {
+   "fieldname": "api_key",
+   "fieldtype": "Password",
+   "label": "API Key / Token",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_config",
+   "fieldtype": "Section Break",
+   "label": "Query & Mapping"
+  },
+  {
+   "description": "JSON filter passed to the SIEM query API",
+   "fieldname": "query_filter",
+   "fieldtype": "Code",
+   "label": "Query Filter",
+   "options": "JSON"
+  },
+  {
+   "fieldname": "column_break_config",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "JSON mapping of SIEM severity values → SOAR severity (Critical/High/Medium/Low/Info)",
+   "fieldname": "severity_mapping",
+   "fieldtype": "Code",
+   "label": "Severity Mapping",
+   "options": "JSON"
+  },
+  {
+   "fieldname": "section_break_options",
+   "fieldtype": "Section Break",
+   "label": "Options"
+  },
+  {
+   "default": "1",
+   "fieldname": "auto_create_alerts",
+   "fieldtype": "Check",
+   "label": "Auto Create Alerts"
+  },
+  {
+   "fieldname": "default_alert_type",
+   "fieldtype": "Data",
+   "label": "Default Alert Type"
+  }
+ ],
+ "links": [],
+ "modified": "2025-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Alert Management",
+ "name": "SOAR SIEM Integration",
+ "naming_rule": "Set by user",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "SOAR Manager",
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

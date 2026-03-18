@@ -1,0 +1,171 @@
+{
+ "actions": [],
+ "autoname": "Prompt",
+ "creation": "2025-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "title",
+  "is_active",
+  "column_break_header",
+  "trigger_type",
+  "version",
+  "section_break_trigger",
+  "trigger_doctype",
+  "trigger_event",
+  "column_break_trigger",
+  "trigger_conditions",
+  "schedule",
+  "section_break_graph",
+  "nodes",
+  "section_break_edges",
+  "edges",
+  "section_break_description",
+  "description"
+ ],
+ "fields": [
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Title",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Active"
+  },
+  {
+   "fieldname": "column_break_header",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Manual",
+   "fieldname": "trigger_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Trigger Type",
+   "options": "Manual\nEvent\nScheduled",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "version",
+   "fieldtype": "Int",
+   "label": "Version",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_trigger",
+   "fieldtype": "Section Break",
+   "label": "Trigger Configuration"
+  },
+  {
+   "depends_on": "eval:doc.trigger_type=='Event'",
+   "fieldname": "trigger_doctype",
+   "fieldtype": "Link",
+   "label": "Trigger DocType",
+   "options": "DocType"
+  },
+  {
+   "depends_on": "eval:doc.trigger_type=='Event'",
+   "fieldname": "trigger_event",
+   "fieldtype": "Select",
+   "label": "Trigger Event",
+   "options": "\nafter_insert\non_update\non_status_change"
+  },
+  {
+   "fieldname": "column_break_trigger",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.trigger_type=='Event'",
+   "description": "JSON conditions that must match for the playbook to trigger",
+   "fieldname": "trigger_conditions",
+   "fieldtype": "Code",
+   "label": "Trigger Conditions",
+   "options": "JSON"
+  },
+  {
+   "depends_on": "eval:doc.trigger_type=='Scheduled'",
+   "description": "Cron expression for scheduled execution",
+   "fieldname": "schedule",
+   "fieldtype": "Data",
+   "label": "Schedule (Cron)"
+  },
+  {
+   "fieldname": "section_break_graph",
+   "fieldtype": "Section Break",
+   "label": "Nodes"
+  },
+  {
+   "fieldname": "nodes",
+   "fieldtype": "Table",
+   "label": "Nodes",
+   "options": "SOAR Playbook Node",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_edges",
+   "fieldtype": "Section Break",
+   "label": "Edges"
+  },
+  {
+   "fieldname": "edges",
+   "fieldtype": "Table",
+   "label": "Edges",
+   "options": "SOAR Playbook Edge"
+  },
+  {
+   "fieldname": "section_break_description",
+   "fieldtype": "Section Break",
+   "label": "Description"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Text Editor",
+   "label": "Description"
+  }
+ ],
+ "links": [
+  {
+   "link_doctype": "SOAR Playbook Execution",
+   "link_fieldname": "playbook"
+  }
+ ],
+ "modified": "2025-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Playbook",
+ "name": "SOAR Playbook",
+ "naming_rule": "Set by user",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "SOAR Manager",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "SOAR Analyst"
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "title",
+ "track_changes": 1
+}

@@ -1,0 +1,124 @@
+{
+ "actions": [],
+ "creation": "2025-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "node_id",
+  "node_name",
+  "node_type",
+  "column_break_1",
+  "action_type",
+  "timeout_seconds",
+  "retry_count",
+  "section_break_config",
+  "script",
+  "column_break_2",
+  "configuration",
+  "section_break_position",
+  "position_x",
+  "position_y"
+ ],
+ "fields": [
+  {
+   "fieldname": "node_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Node ID",
+   "reqd": 1,
+   "unique": 0
+  },
+  {
+   "fieldname": "node_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Node Name",
+   "reqd": 1
+  },
+  {
+   "default": "Action",
+   "fieldname": "node_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Node Type",
+   "options": "Start\nAction\nCondition\nParallel Split\nParallel Join\nWait\nEnd",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.node_type=='Action'",
+   "fieldname": "action_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Action Type",
+   "options": "\nScript\nAPI Call\nSend Email\nSend Notification\nUpdate Document\nCreate Document\nCustom"
+  },
+  {
+   "default": "300",
+   "fieldname": "timeout_seconds",
+   "fieldtype": "Int",
+   "label": "Timeout (seconds)"
+  },
+  {
+   "default": "0",
+   "fieldname": "retry_count",
+   "fieldtype": "Int",
+   "label": "Retry Count"
+  },
+  {
+   "fieldname": "section_break_config",
+   "fieldtype": "Section Break",
+   "label": "Configuration"
+  },
+  {
+   "fieldname": "script",
+   "fieldtype": "Code",
+   "label": "Script",
+   "options": "Python"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "JSON configuration for the node action",
+   "fieldname": "configuration",
+   "fieldtype": "Code",
+   "label": "Configuration",
+   "options": "JSON"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_position",
+   "fieldtype": "Section Break",
+   "label": "Visual Position"
+  },
+  {
+   "default": "0",
+   "fieldname": "position_x",
+   "fieldtype": "Float",
+   "label": "X"
+  },
+  {
+   "default": "0",
+   "fieldname": "position_y",
+   "fieldtype": "Float",
+   "label": "Y"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2025-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Playbook",
+ "name": "SOAR Playbook Node",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

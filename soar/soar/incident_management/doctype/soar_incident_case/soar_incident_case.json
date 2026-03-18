@@ -1,0 +1,63 @@
+{
+ "actions": [],
+ "creation": "2025-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "case",
+  "case_title",
+  "column_break_1",
+  "case_severity",
+  "case_status"
+ ],
+ "fields": [
+  {
+   "fieldname": "case",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Case",
+   "options": "SOAR Case",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "case.title",
+   "fieldname": "case_title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Case Title",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "case.severity",
+   "fieldname": "case_severity",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Severity",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "case.status",
+   "fieldname": "case_status",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Status",
+   "read_only": 1
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2025-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Incident Management",
+ "name": "SOAR Incident Case",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

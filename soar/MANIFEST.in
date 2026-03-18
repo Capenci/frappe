@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include soar *.css
+recursive-include soar *.csv
+recursive-include soar *.html
+recursive-include soar *.ico
+recursive-include soar *.js
+recursive-include soar *.json
+recursive-include soar *.md
+recursive-include soar *.png
+recursive-include soar *.py
+recursive-include soar *.svg
+recursive-include soar *.txt
+recursive-exclude soar *.pyc

@@ -1,0 +1,183 @@
+{
+ "actions": [],
+ "autoname": "Prompt",
+ "creation": "2025-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "title",
+  "enabled",
+  "column_break_header",
+  "apply_to",
+  "priority",
+  "section_break_trigger",
+  "trigger_type",
+  "from_status",
+  "to_status",
+  "column_break_trigger",
+  "schedule",
+  "section_break_action",
+  "action",
+  "required_role",
+  "column_break_action",
+  "auto_escalate",
+  "escalate_to_role",
+  "section_break_conditions",
+  "conditions"
+ ],
+ "fields": [
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Title",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Enabled"
+  },
+  {
+   "fieldname": "column_break_header",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "apply_to",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Apply To",
+   "options": "SOAR Alert\nSOAR Case\nSOAR Incident",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "description": "Higher priority rules are evaluated first",
+   "fieldname": "priority",
+   "fieldtype": "Int",
+   "label": "Priority"
+  },
+  {
+   "fieldname": "section_break_trigger",
+   "fieldtype": "Section Break",
+   "label": "Trigger"
+  },
+  {
+   "default": "On Status Change",
+   "fieldname": "trigger_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Trigger Type",
+   "options": "On Status Change\nOn Event\nScheduled",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.trigger_type=='On Status Change'",
+   "fieldname": "from_status",
+   "fieldtype": "Data",
+   "label": "From Status"
+  },
+  {
+   "depends_on": "eval:doc.trigger_type=='On Status Change'",
+   "fieldname": "to_status",
+   "fieldtype": "Data",
+   "label": "To Status"
+  },
+  {
+   "fieldname": "column_break_trigger",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.trigger_type=='Scheduled'",
+   "description": "Cron expression, e.g. '0 9 * * 1-5'",
+   "fieldname": "schedule",
+   "fieldtype": "Data",
+   "label": "Schedule (Cron)"
+  },
+  {
+   "fieldname": "section_break_action",
+   "fieldtype": "Section Break",
+   "label": "Action"
+  },
+  {
+   "default": "Allow",
+   "fieldname": "action",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Action",
+   "options": "Allow\nDeny\nEscalate",
+   "reqd": 1
+  },
+  {
+   "description": "Role required to perform this status change",
+   "fieldname": "required_role",
+   "fieldtype": "Link",
+   "label": "Required Role",
+   "options": "Role"
+  },
+  {
+   "fieldname": "column_break_action",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.action=='Escalate'",
+   "fieldname": "auto_escalate",
+   "fieldtype": "Check",
+   "label": "Auto Escalate"
+  },
+  {
+   "depends_on": "eval:doc.action=='Escalate'",
+   "fieldname": "escalate_to_role",
+   "fieldtype": "Link",
+   "label": "Escalate To Role",
+   "options": "Role"
+  },
+  {
+   "fieldname": "section_break_conditions",
+   "fieldtype": "Section Break",
+   "label": "Conditions"
+  },
+  {
+   "description": "Additional conditions that must be met for this rule to apply",
+   "fieldname": "conditions",
+   "fieldtype": "Table",
+   "label": "Conditions",
+   "options": "SOAR Escalation Rule Condition"
+  }
+ ],
+ "links": [],
+ "modified": "2025-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Escalation",
+ "name": "SOAR Escalation Rule",
+ "naming_rule": "Set by user",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "SOAR Manager",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "SOAR Analyst"
+  }
+ ],
+ "sort_field": "priority",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
