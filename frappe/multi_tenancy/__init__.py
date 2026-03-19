@@ -15,3 +15,56 @@ Configuration in site_config.json:
     "default_tenant": "default"
 }
 """
+
+import frappe
+
+
+def sync_all_tenant_schemas():
+	"""Sync all tenant schemas/databases from the main database.
+
+	This should be called after install_app or migrate to ensure that
+	all tenants receive the latest table structures and data (Desktop Icons,
+	Module Defs, Workspaces, Workspace Sidebars, DocType tables, etc.).
+
+	For schema isolation tenants the function copies every table from
+	the main DB schema into each tenant's schema.
+	For database isolation tenants it does the same via a separate DB
+	connection.
+
+	The function is a no-op when multi-tenancy is not enabled.
+	"""
+	if not frappe.conf.get("multi_tenancy_enabled"):
+		return
+
+	from frappe.multi_tenancy.commands import (
+		_install_schema_in_tenant_db,
+		_install_schema_in_tenant_schema,
+	)
+
+	# Query tenants from the main DB (ensure we're on the main schema)
+	from frappe.multi_tenancy.tenant_manager import main_db_context
+
+	with main_db_context():
+		tenants = frappe.db.get_all(
+			"Tenant",
+			filters={"enabled": 1},
+			fields=["name", "isolation_mode", "schema_name", "db_name"],
+		)
+
+	if not tenants:
+		return
+
+	print(f"Syncing {len(tenants)} tenant(s)...")
+	for tenant_info in tenants:
+		tenant_name = tenant_info.name
+		try:
+			tenant_doc = frappe.get_doc("Tenant", tenant_name)
+			if tenant_doc.isolation_mode == "schema":
+				print(f"  Syncing schema for tenant '{tenant_name}'...")
+				_install_schema_in_tenant_schema(tenant_doc)
+			elif tenant_doc.isolation_mode == "database":
+				print(f"  Syncing database for tenant '{tenant_name}'...")
+				_install_schema_in_tenant_db(tenant_doc)
+			print(f"  Tenant '{tenant_name}' synced successfully.")
+		except Exception as e:
+			print(f"  Warning: could not sync tenant '{tenant_name}': {e}")

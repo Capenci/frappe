@@ -196,6 +196,12 @@ class SiteMigration:
 			for fn in frappe.get_hooks("after_migrate", app_name=app):
 				frappe.get_attr(fn)()
 
+		# Sync all tenant schemas so every tenant gets updated data
+		print("Syncing tenant schemas...")
+		from frappe.multi_tenancy import sync_all_tenant_schemas
+
+		sync_all_tenant_schemas()
+
 	def required_services_running(self) -> bool:
 		"""Return True if all required services are running. Return False and print
 		instructions to stdout when required services are not available.

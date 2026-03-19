@@ -4,13 +4,242 @@
 .soar-severity-critical { color: #fff; background-color: #e74c3c; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
 .soar-severity-high { color: #fff; background-color: #e67e22; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
 .soar-severity-medium { color: #fff; background-color: #f39c12; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
-.soar-severity-low { color: #fff; background-color: #3498db; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
-.soar-severity-info { color: #fff; background-color: #95a5a6; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+.soar-severity-low { color: #fff; background-color: #27ae60; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+.soar-severity-info { color: #fff; background-color: #3498db; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
 
-/* SLA status indicators */
-.soar-sla-ok { color: #27ae60; font-weight: bold; }
-.soar-sla-warning { color: #f39c12; font-weight: bold; }
-.soar-sla-breached { color: #e74c3c; font-weight: bold; }
+/* SLA indicator */
+.soar-sla-bar { height: 6px; border-radius: 3px; background: #ecf0f1; margin-top: 4px; }
+.soar-sla-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
 
-/* Playbook node styles */
-.soar-playbook-canvas { border: 1px solid var(--border-color); border-radius: 8px; min-height: 400px; background: var(--bg-color); }
+/* ═══════════════════════════════════════════════════════════
+   Playbook Graph View (PGV)
+   Matches Frappe Workflow Builder styling
+   ═══════════════════════════════════════════════════════════ */
+
+/* Root: the scrollable viewport with a dot-grid background */
+.pgv {
+position: relative;
+width: 100%;
+height: 620px;
+overflow: auto;
+border: 1px solid var(--border-color, #d1d8dd);
+border-radius: var(--border-radius-lg, 8px);
+background-color: #fff;
+background-image: radial-gradient(circle, #ccc 0.8px, transparent 0.8px);
+background-size: 10px 10px;
+}
+
+/* Canvas: the big inner world that can be bigger than the viewport */
+.pgv-canvas {
+position: relative;
+min-width: 900px;
+min-height: 500px;
+}
+
+/* ─── SVG layer for edges ─────────────────────────────────── */
+.pgv-svg {
+position: absolute;
+top: 0;
+left: 0;
+z-index: 1;
+pointer-events: none;
+overflow: visible;
+}
+
+/* Edge visible line */
+.pgv-eline {
+fill: none;
+stroke: #687178;
+stroke-width: 1.5px;
+pointer-events: none;
+transition: stroke 0.15s;
+}
+
+/* Edge hit area (invisible, for clicking) */
+.pgv-ehit {
+fill: none;
+stroke: transparent;
+stroke-width: 14px;
+pointer-events: stroke;
+cursor: pointer;
+}
+
+/* Selected edge */
+.pgv-esel .pgv-eline {
+stroke: #2490EF;
+stroke-width: 2px;
+}
+
+/* Temp edge (while dragging to create connection) */
+.pgv-tmp {
+fill: none;
+stroke: #2490EF;
+stroke-width: 1.5px;
+stroke-dasharray: 6 3;
+pointer-events: none;
+}
+
+/* ─── Nodes layer ─────────────────────────────────────────── */
+.pgv-nodes {
+position: absolute;
+top: 0;
+left: 0;
+z-index: 2;
+pointer-events: none;
+}
+
+/* ─── Node (shared) ──────────────────────────────────────── */
+.pgv-node {
+position: absolute;
+display: flex;
+align-items: center;
+justify-content: center;
+cursor: grab;
+pointer-events: auto;
+user-select: none;
+border: 1px solid;
+box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
+font-size: 13px;
+font-weight: 500;
+white-space: nowrap;
+transition: box-shadow 0.15s, outline 0.15s;
+z-index: 2;
+}
+.pgv-node:hover {
+box-shadow: 0 3px 8px rgba(0,0,0,0.18);
+z-index: 3;
+}
+
+/* State node (pill shape) — like WF StateNode */
+.pgv-state {
+border-radius: 999px;
+padding: 0 25px;
+}
+
+/* Action node (small rectangle) — like WF ActionNode */
+.pgv-action {
+border-radius: 5px;
+padding: 0 12px;
+}
+
+/* Node label */
+.pgv-nlbl {
+overflow: hidden;
+text-overflow: ellipsis;
+}
+
+/* Selected node */
+.pgv-node.pgv-sel {
+outline: 2px solid #2490EF;
+outline-offset: 2px;
+}
+
+/* Dragging node */
+.pgv-node.pgv-dragging {
+cursor: grabbing;
+opacity: 0.85;
+z-index: 10;
+}
+
+/* ─── Handles (connection ports) ──────────────────────────── */
+.pgv-h {
+position: absolute;
+width: 8px;
+height: 8px;
+background: #687178;
+border-radius: 50%;
+cursor: crosshair;
+opacity: 0;
+transition: opacity 0.15s, transform 0.15s;
+z-index: 5;
+pointer-events: auto;
+}
+.pgv-node:hover .pgv-h,
+.pgv-conn .pgv-h {
+opacity: 1;
+}
+.pgv-h:hover {
+transform: scale(1.6);
+background: #2490EF;
+}
+.pgv-h-top    { top: -5px;   left: 50%;  margin-left: -4px; }
+.pgv-h-right  { top: 50%;    right: -5px; margin-top: -4px; }
+.pgv-h-bottom { bottom: -5px; left: 50%; margin-left: -4px; }
+.pgv-h-left   { top: 50%;    left: -5px;  margin-top: -4px; }
+
+/* ─── Labels overlay ──────────────────────────────────────── */
+.pgv-lbls {
+position: absolute;
+top: 0;
+left: 0;
+z-index: 4;
+pointer-events: none;
+}
+
+.pgv-lbl {
+position: absolute;
+transform: translate(-50%, -50%);
+background: #fff;
+border: 1px solid #d1d8dd;
+border-radius: 4px;
+padding: 1px 8px;
+font-size: 11px;
+color: #687178;
+pointer-events: auto;
+cursor: pointer;
+white-space: nowrap;
+}
+.pgv-lbl-sel {
+border-color: #2490EF;
+color: #2490EF;
+font-weight: 600;
+}
+
+/* ─── Toolbar (top-right, sticky) ─────────────────────────── */
+.pgv-bar {
+position: sticky;
+top: 8px;
+float: right;
+z-index: 20;
+display: flex;
+gap: 6px;
+align-items: center;
+background: #fff;
+border: 1px solid #d1d8dd;
+border-radius: 6px;
+padding: 4px 10px;
+margin: 8px;
+box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+.pgv-tsel {
+border: 1px solid #d1d8dd;
+border-radius: 4px;
+padding: 2px 6px;
+font-size: 12px;
+background: #fff;
+cursor: pointer;
+outline: none;
+}
+
+/* ─── Zoom controls (bottom-left, sticky) ─────────────────── */
+.pgv-zoom {
+position: sticky;
+bottom: 8px;
+float: left;
+z-index: 20;
+display: flex;
+flex-direction: column;
+gap: 2px;
+background: #fff;
+border: 1px solid #d1d8dd;
+border-radius: 6px;
+padding: 4px;
+margin: 8px;
+box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+.pgv-zbtn {
+width: 32px;
+text-align: center;
+font-size: 14px;
+}

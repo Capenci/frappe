@@ -16,6 +16,8 @@
   "column_break_trigger",
   "trigger_conditions",
   "schedule",
+  "section_break_designer",
+  "graph_canvas",
   "section_break_graph",
   "nodes",
   "section_break_edges",
@@ -98,9 +100,20 @@
    "label": "Schedule (Cron)"
   },
   {
+   "fieldname": "section_break_designer",
+   "fieldtype": "Section Break",
+   "label": "Playbook Designer"
+  },
+  {
+   "fieldname": "graph_canvas",
+   "fieldtype": "HTML",
+   "label": "Graph Canvas"
+  },
+  {
+   "collapsible": 1,
    "fieldname": "section_break_graph",
    "fieldtype": "Section Break",
-   "label": "Nodes"
+   "label": "Nodes (Table View)"
   },
   {
    "fieldname": "nodes",
@@ -110,9 +123,10 @@
    "reqd": 1
   },
   {
+   "collapsible": 1,
    "fieldname": "section_break_edges",
    "fieldtype": "Section Break",
-   "label": "Edges"
+   "label": "Edges (Table View)"
   },
   {
    "fieldname": "edges",

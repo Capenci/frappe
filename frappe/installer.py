@@ -343,6 +343,11 @@ def install_app(name, verbose=False, set_as_patched=True, force=False):
 	for after_sync in app_hooks.after_sync or []:
 		frappe.get_attr(after_sync)()  #
 
+	# Sync all tenant schemas so every tenant gets the new app's data
+	from frappe.multi_tenancy import sync_all_tenant_schemas
+
+	sync_all_tenant_schemas()
+
 	frappe.clear_cache()
 	frappe.client_cache.erase_persistent_caches()
 	frappe.flags.in_install = False

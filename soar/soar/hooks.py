@@ -82,3 +82,14 @@ fixtures = [
 
 app_include_css = "/assets/soar/css/soar.css"
 app_include_js = "/assets/soar/js/soar.js"
+
+app_home = "/desk/soar"
+
+add_to_apps_screen = [
+    {
+        "name": "soar",
+        "logo": "/assets/frappe/images/frappe-framework-logo.svg",
+        "title": "SOAR",
+        "route": "/desk/soar",
+    }
+]
