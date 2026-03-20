@@ -38,12 +38,17 @@ def start_execution(playbook_name, trigger_type="Manual", input_data=None, trigg
         }
     )
     execution.insert(ignore_permissions=True)
-    frappe.db.commit()
+
+    # Capture tenant schema so the background worker can switch to the correct DB.
+    # Multi-tenancy routes web requests to a tenant-specific database/schema,
+    # but the RQ worker connects to the main database by default.
+    tenant_schema = getattr(frappe.local, "tenant_schema", None)
 
     frappe.enqueue(
         _run_execution,
-        queue="default",
+        queue="short",
         execution_name=execution.name,
+        tenant_schema=tenant_schema,
         enqueue_after_commit=True,
     )
 
@@ -99,8 +104,14 @@ def run_scheduled_playbooks():
 # Execution Engine
 # ──────────────────────────────────────────
 
-def _run_execution(execution_name):
+def _run_execution(execution_name, tenant_schema=None):
     """Main execution loop — processes the DAG."""
+    # If multi-tenancy is active, switch to the tenant's database/schema
+    # so the worker can find documents created by the web process.
+    if tenant_schema:
+        frappe.db.sql(f"USE `{tenant_schema}`")
+        frappe.local.tenant_schema = tenant_schema
+
     execution = frappe.get_doc("SOAR Playbook Execution", execution_name)
 
     if execution.status == "Cancelled":
@@ -121,14 +132,29 @@ def _run_execution(execution_name):
         # Topological execution
         _execute_graph(execution, playbook, graph, context)
 
+        finished = now_datetime()
         execution.reload()
         execution.db_set("status", "Completed", update_modified=False)
-        execution.db_set("completed_at", now_datetime(), update_modified=False)
+        execution.db_set("completed_at", finished, update_modified=False)
+        if execution.started_at:
+            execution.db_set("duration", round((finished - execution.started_at).total_seconds(), 3), update_modified=False)
+
+        # Store aggregated output from all completed steps
+        final_output = context.get("results", {})
+        if final_output:
+            execution.db_set(
+                "output_data",
+                json.dumps(final_output, indent=2, default=str)[:100000],
+                update_modified=False,
+            )
 
     except Exception as e:
+        finished = now_datetime()
         execution.reload()
         execution.db_set("status", "Failed", update_modified=False)
-        execution.db_set("completed_at", now_datetime(), update_modified=False)
+        execution.db_set("completed_at", finished, update_modified=False)
+        if execution.started_at:
+            execution.db_set("duration", round((finished - execution.started_at).total_seconds(), 3), update_modified=False)
         execution.db_set("error", traceback.format_exc(), update_modified=False)
 
     frappe.db.commit()
@@ -204,11 +230,13 @@ def _execute_graph(execution, playbook, graph, context):
 
 def _execute_node(execution, node, context):
     """Execute a single node and record the step result."""
+    started = now_datetime()
     step = {
         "node_id": node.node_id,
         "node_name": node.node_name,
+        "node_type": node.node_type,
         "status": "Running",
-        "started_at": now_datetime(),
+        "started_at": started,
         "input_data": json.dumps(context.get("input", {}), default=str)[:10000],
     }
 
@@ -222,8 +250,11 @@ def _execute_node(execution, node, context):
 
     try:
         output = _run_node_action(node, context)
+        finished = now_datetime()
+        duration = (finished - started).total_seconds()
         step_row.db_set("status", "Completed", update_modified=False)
-        step_row.db_set("completed_at", now_datetime(), update_modified=False)
+        step_row.db_set("completed_at", finished, update_modified=False)
+        step_row.db_set("duration", round(duration, 3), update_modified=False)
         if output is not None:
             step_row.db_set(
                 "output_data",
@@ -233,8 +264,11 @@ def _execute_node(execution, node, context):
         return output
 
     except Exception as e:
+        finished = now_datetime()
+        duration = (finished - started).total_seconds()
         step_row.db_set("status", "Failed", update_modified=False)
-        step_row.db_set("completed_at", now_datetime(), update_modified=False)
+        step_row.db_set("completed_at", finished, update_modified=False)
+        step_row.db_set("duration", round(duration, 3), update_modified=False)
         step_row.db_set("error", traceback.format_exc()[:5000], update_modified=False)
         raise
 
@@ -280,28 +314,43 @@ def _run_node_action(node, context):
 
 
 def _execute_script(node, context):
-    """Execute a Python script in a restricted sandbox."""
+    """Execute a Python script in a sandbox with essential builtins."""
     if not node.script:
         return None
+
+    import json as _json
 
     local_vars = {
         "input_data": context.get("input", {}),
         "results": context.get("results", {}),
+        "context": context,
         "frappe": frappe,
+        "json": _json,
     }
-    exec_globals = {"__builtins__": {}}
-    safe_builtins = {
-        "str": str, "int": int, "float": float, "bool": bool,
-        "list": list, "dict": dict, "set": set, "tuple": tuple,
-        "len": len, "range": range, "enumerate": enumerate,
-        "zip": zip, "map": map, "filter": filter, "sorted": sorted,
-        "min": min, "max": max, "sum": sum, "abs": abs, "round": round,
-        "isinstance": isinstance, "type": type, "print": print,
-        "True": True, "False": False, "None": None,
-        "json": __import__("json"),
-    }
-    exec_globals["__builtins__"] = safe_builtins
 
+    # Allow Python imports but provide common modules in scope already
+    safe_builtins = dict(__builtins__) if isinstance(__builtins__, dict) else dict(vars(__builtins__))
+
+    # Remove truly dangerous builtins
+    for name in ("eval", "exec", "compile", "open", "breakpoint", "__import__"):
+        safe_builtins.pop(name, None)
+
+    # Controlled import that only allows approved modules
+    _ALLOWED_MODULES = frozenset({
+        "json", "math", "re", "datetime", "time", "hashlib", "hmac",
+        "base64", "urllib", "urllib.parse", "collections", "itertools",
+        "functools", "operator", "copy", "textwrap", "string",
+        "frappe", "frappe.utils", "requests",
+    })
+
+    def _safe_import(name, globals=None, locals=None, fromlist=(), level=0):
+        if name not in _ALLOWED_MODULES:
+            raise ImportError(f"Import of '{name}' is not allowed in playbook scripts")
+        return __import__(name, globals, locals, fromlist, level)
+
+    safe_builtins["__import__"] = _safe_import
+
+    exec_globals = {"__builtins__": safe_builtins}
     exec(compile(node.script, f"<playbook-node-{node.node_id}>", "exec"), exec_globals, local_vars)
     return local_vars.get("result")
 
@@ -449,6 +498,7 @@ def _safe_eval(expression, context):
     allowed_names = {
         "input_data": context.get("input", {}),
         "results": context.get("results", {}),
+        "context": context,
         "True": True,
         "False": False,
         "None": None,
@@ -461,6 +511,7 @@ def _evaluate_edge_condition(condition, context, node_result):
     allowed = {
         "input_data": context.get("input", {}),
         "results": context.get("results", {}),
+        "context": context,
         "result": node_result,
         "True": True,
         "False": False,

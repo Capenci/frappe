@@ -9,6 +9,10 @@ class SOARPlaybookExecution(Document):
         if self.status in ("Queued", "Running"):
             self.status = "Cancelled"
             self.completed_at = frappe.utils.now_datetime()
+            if self.started_at:
+                self.duration = round(
+                    (self.completed_at - self.started_at).total_seconds(), 3
+                )
             self.save(ignore_permissions=True)
 
     @frappe.whitelist()
@@ -20,7 +24,9 @@ class SOARPlaybookExecution(Document):
                     return {
                         "node_id": step.node_id,
                         "node_name": step.node_name,
+                        "node_type": step.node_type,
                         "status": step.status,
+                        "duration": step.duration,
                         "output_data": step.output_data,
                         "error": step.error,
                     }
@@ -29,7 +35,11 @@ class SOARPlaybookExecution(Document):
             {
                 "node_id": s.node_id,
                 "node_name": s.node_name,
+                "node_type": s.node_type,
                 "status": s.status,
+                "duration": s.duration,
+                "output_data": s.output_data,
+                "error": s.error,
             }
             for s in self.step_results
         ]

@@ -15,10 +15,15 @@
   "started_at",
   "column_break_time",
   "completed_at",
-  "section_break_input",
-  "input_data",
+  "duration",
+  "section_break_graph",
+  "execution_graph",
   "section_break_results",
   "step_results",
+  "section_break_output",
+  "output_data",
+  "section_break_input",
+  "input_data",
   "section_break_error",
   "error"
  ],
@@ -90,17 +95,23 @@
    "read_only": 1
   },
   {
-   "collapsible": 1,
-   "fieldname": "section_break_input",
-   "fieldtype": "Section Break",
-   "label": "Input Data"
+   "description": "Total execution duration in seconds",
+   "fieldname": "duration",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Duration (s)",
+   "precision": "3",
+   "read_only": 1
   },
   {
-   "fieldname": "input_data",
-   "fieldtype": "Code",
-   "label": "Input Data",
-   "options": "JSON",
-   "read_only": 1
+   "fieldname": "section_break_graph",
+   "fieldtype": "Section Break",
+   "label": "Execution Flow"
+  },
+  {
+   "fieldname": "execution_graph",
+   "fieldtype": "HTML",
+   "label": "Execution Graph"
   },
   {
    "fieldname": "section_break_results",
@@ -115,7 +126,33 @@
    "read_only": 1
   },
   {
+   "fieldname": "section_break_output",
+   "fieldtype": "Section Break",
+   "label": "Final Output"
+  },
+  {
+   "fieldname": "output_data",
+   "fieldtype": "Code",
+   "label": "Output Data",
+   "options": "JSON",
+   "read_only": 1
+  },
+  {
    "collapsible": 1,
+   "fieldname": "section_break_input",
+   "fieldtype": "Section Break",
+   "label": "Input Data"
+  },
+  {
+   "fieldname": "input_data",
+   "fieldtype": "Code",
+   "label": "Input Data",
+   "options": "JSON",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "depends_on": "error",
    "fieldname": "section_break_error",
    "fieldtype": "Section Break",
    "label": "Error"
@@ -128,7 +165,7 @@
   }
  ],
  "links": [],
- "modified": "2025-01-01 00:00:00.000000",
+ "modified": "2025-03-20 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "Playbook",
  "name": "SOAR Playbook Execution",
