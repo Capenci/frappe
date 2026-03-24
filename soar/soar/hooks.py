@@ -51,7 +51,7 @@ doc_events = {
 # ---------- Scheduled Tasks ----------
 scheduler_events = {
     "cron": {
-        "*/5 * * * *": [
+        "* * * * *": [
             "soar.services.sla_service.check_sla_breaches",
         ],
         "*/10 * * * *": [

@@ -15,6 +15,7 @@
   "from_status",
   "to_status",
   "column_break_trigger",
+  "event_type",
   "schedule",
   "section_break_action",
   "action",
@@ -89,6 +90,15 @@
   {
    "fieldname": "column_break_trigger",
    "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.trigger_type=='On Event'",
+   "description": "The event that triggers this escalation rule",
+   "fieldname": "event_type",
+   "fieldtype": "Select",
+   "label": "Event Type",
+   "options": "\nSLA Breach\nSLA Warning\nPriority Change\nSeverity Change\nAssignment Change",
+   "mandatory_depends_on": "eval:doc.trigger_type=='On Event'"
   },
   {
    "depends_on": "eval:doc.trigger_type=='Scheduled'",

@@ -1,6 +1,7 @@
 frappe.ui.form.on("SOAR Incident", {
 	refresh(frm) {
-		frm.page.set_indicator(frm.doc.status, soar.severity_colors[frm.doc.severity] || "grey");
+		const _colors = (typeof soar !== "undefined" && soar.severity_colors) || {};
+		frm.page.set_indicator(frm.doc.status, _colors[frm.doc.severity] || "grey");
 
 		if (frm.doc.sla_status === "Breached") {
 			frm.dashboard.set_headline(
@@ -13,6 +14,11 @@ frappe.ui.form.on("SOAR Incident", {
 		}
 
 		if (!frm.is_new()) {
+			// Escalate button
+			if (typeof soar !== "undefined" && soar.add_escalate_button) {
+				soar.add_escalate_button(frm);
+			}
+
 			// Add Case
 			frm.add_custom_button(__("Add Case"), () => {
 				frappe.prompt(

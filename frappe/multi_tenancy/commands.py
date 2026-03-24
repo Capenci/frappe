@@ -454,6 +454,318 @@ def _copy_tables_postgres(main_db, schema_name):
 	frappe.db.commit()
 
 
+# ---------------------------------------------------------------------------
+# Schema-only sync for migrate (preserves tenant data)
+# ---------------------------------------------------------------------------
+
+def _sync_schema_in_tenant_db(tenant):
+	"""Sync table structures AND DocType metadata in a tenant's separate database.
+
+	Unlike ``_install_schema_in_tenant_db`` this does NOT drop tables or
+	copy data – it only adds missing tables/columns so that tenant data
+	is preserved across migrations.  It also syncs DocType metadata rows.
+	"""
+	from frappe.database import get_db
+
+	tenant_db = get_db(
+		socket=frappe.conf.get("db_socket"),
+		host=tenant.db_host or frappe.conf.db_host,
+		port=tenant.db_port or frappe.conf.db_port,
+		user=tenant.db_user or tenant.db_name,
+		password=tenant.get_password("db_password") or frappe.conf.db_password,
+		cur_db_name=tenant.db_name,
+	)
+
+	original_db = frappe.local.db
+	frappe.local.db = tenant_db
+
+	try:
+		_sync_tables_mariadb(frappe.conf.db_name, tenant.db_name)
+		_sync_doctype_metadata(frappe.conf.db_name, tenant.db_name)
+		frappe.db.commit()
+	finally:
+		frappe.local.db = original_db
+		tenant_db.close()
+
+
+def _sync_schema_in_tenant_schema(tenant):
+	"""Sync table structures AND DocType metadata in a tenant's schema.
+
+	Preserves existing tenant data — only adds missing tables/columns
+	and replaces DocType/DocField/DocPerm metadata so that field
+	definitions stay in sync across all tenants.
+	"""
+	db_type = frappe.conf.get("db_type", "mariadb")
+	main_db = frappe.conf.db_name
+	schema_name = tenant.schema_name
+
+	if db_type == "postgres":
+		_sync_tables_postgres(main_db, schema_name)
+	else:
+		_sync_tables_mariadb(main_db, schema_name)
+
+	# After table structure is synced, sync DocType metadata rows
+	_sync_doctype_metadata(main_db, schema_name)
+
+
+def _sync_tables_mariadb(main_db, tenant_db):
+	"""Sync table structures from main DB to tenant DB (MariaDB).
+
+	For each table in the main database:
+	- If the table does not exist in the tenant DB: create it (structure only, no data).
+	- If the table exists: add any missing columns and update changed column types.
+
+	Existing tenant data is never dropped or overwritten.
+	"""
+	# Get all tables from the main database
+	main_tables = frappe.db.sql(
+		"SELECT TABLE_NAME FROM information_schema.TABLES "
+		"WHERE TABLE_SCHEMA = %s AND TABLE_TYPE = 'BASE TABLE'",
+		(main_db,),
+		as_list=True,
+	)
+
+	if not main_tables:
+		click.secho("No tables found in main database to sync", fg="yellow")
+		return
+
+	# Get existing tables in tenant DB
+	tenant_tables_result = frappe.db.sql(
+		"SELECT TABLE_NAME FROM information_schema.TABLES "
+		"WHERE TABLE_SCHEMA = %s AND TABLE_TYPE = 'BASE TABLE'",
+		(tenant_db,),
+		as_list=True,
+	)
+	existing_tenant_tables = {row[0] for row in tenant_tables_result}
+
+	# Switch to tenant DB
+	frappe.db.sql(f"USE `{tenant_db}`")
+
+	for (table_name,) in main_tables:
+		try:
+			if table_name not in existing_tenant_tables:
+				# Table doesn't exist in tenant — create structure only (no data)
+				create_stmt = frappe.db.sql(
+					f"SHOW CREATE TABLE `{main_db}`.`{table_name}`", as_list=True
+				)
+				if create_stmt:
+					frappe.db.sql_ddl(create_stmt[0][1])
+			else:
+				# Table exists — sync columns
+				_sync_columns_mariadb(main_db, tenant_db, table_name)
+		except Exception as e:
+			click.secho(f"  Warning: could not sync table {table_name}: {e}", fg="yellow")
+
+	frappe.db.commit()
+
+	# Switch back to main DB
+	frappe.db.sql(f"USE `{frappe.conf.db_name}`")
+
+
+def _sync_columns_mariadb(main_db, tenant_db, table_name):
+	"""Sync columns of a single table from main DB to tenant DB (MariaDB).
+
+	Adds missing columns and modifies columns whose type/default has changed.
+	Never drops columns to avoid accidental data loss.
+	"""
+	# Fetch columns from main DB
+	main_columns = frappe.db.sql(
+		"SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE, COLUMN_DEFAULT, EXTRA, "
+		"       ORDINAL_POSITION "
+		"FROM information_schema.COLUMNS "
+		"WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s "
+		"ORDER BY ORDINAL_POSITION",
+		(main_db, table_name),
+		as_dict=True,
+	)
+
+	# Fetch columns from tenant DB
+	tenant_columns = frappe.db.sql(
+		"SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE, COLUMN_DEFAULT, EXTRA "
+		"FROM information_schema.COLUMNS "
+		"WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s",
+		(tenant_db, table_name),
+		as_dict=True,
+	)
+	tenant_col_map = {c["COLUMN_NAME"]: c for c in tenant_columns}
+
+	prev_col = None
+	for col in main_columns:
+		col_name = col["COLUMN_NAME"]
+		col_type = col["COLUMN_TYPE"]
+		nullable = "NULL" if col["IS_NULLABLE"] == "YES" else "NOT NULL"
+		default = _build_default_clause(col["COLUMN_DEFAULT"])
+		extra = col.get("EXTRA") or ""
+
+		if col_name not in tenant_col_map:
+			# Column missing in tenant — add it
+			position = f"AFTER `{prev_col}`" if prev_col else "FIRST"
+			frappe.db.sql_ddl(
+				f"ALTER TABLE `{table_name}` ADD COLUMN `{col_name}` {col_type} "
+				f"{nullable} {default} {extra} {position}"
+			)
+		else:
+			# Column exists — check if definition changed
+			t_col = tenant_col_map[col_name]
+			if (
+				t_col["COLUMN_TYPE"] != col_type
+				or t_col["IS_NULLABLE"] != col["IS_NULLABLE"]
+				or t_col["COLUMN_DEFAULT"] != col["COLUMN_DEFAULT"]
+			):
+				frappe.db.sql_ddl(
+					f"ALTER TABLE `{table_name}` MODIFY COLUMN `{col_name}` {col_type} "
+					f"{nullable} {default} {extra}"
+				)
+
+		prev_col = col_name
+
+
+def _sync_doctype_metadata(main_db, tenant_db):
+	"""Sync DocType metadata rows from the main DB to the tenant DB.
+
+	This ensures that every tenant has up-to-date DocType, DocField,
+	DocPerm (and related child-table) records so that Frappe's metadata
+	cache (``get_meta``) returns the correct field list.
+
+	Only *system* metadata tables are synced — tenant user-data tables
+	are never touched.
+	"""
+	# The metadata tables that must be identical across all tenants.
+	# Each entry is (table_name, parent_column_or_None).
+	# When parent_column is given, only rows whose parent appears in
+	# `tabDocType` are synced (i.e. DocType children).
+	METADATA_TABLES = [
+		("tabDocType", None),
+		("tabDocField", "parent"),
+		("tabDocPerm", "parent"),
+		("tabDocType Action", "parent"),
+		("tabDocType Link", "parent"),
+		("tabDocType State", "parent"),
+	]
+
+	# Make sure we're operating on the main DB to read source data
+	frappe.db.sql(f"USE `{main_db}`")
+
+	# Get the list of all DocTypes in the main DB
+	all_doctypes = frappe.db.sql(
+		f"SELECT name FROM `{main_db}`.`tabDocType`", as_list=True
+	)
+	if not all_doctypes:
+		return
+
+	dt_names = [row[0] for row in all_doctypes]
+
+	for table_name, parent_col in METADATA_TABLES:
+		# Check that the table exists in both main and tenant
+		main_exists = frappe.db.sql(
+			"SELECT 1 FROM information_schema.TABLES "
+			"WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s LIMIT 1",
+			(main_db, table_name),
+		)
+		tenant_exists = frappe.db.sql(
+			"SELECT 1 FROM information_schema.TABLES "
+			"WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s LIMIT 1",
+			(tenant_db, table_name),
+		)
+		if not main_exists or not tenant_exists:
+			continue
+
+		if parent_col:
+			# Child table — delete tenant rows for known DocTypes, then re-insert from main
+			# Process in batches to avoid overly-long IN clauses
+			batch_size = 100
+			for i in range(0, len(dt_names), batch_size):
+				batch = dt_names[i : i + batch_size]
+				placeholders = ", ".join(["%s"] * len(batch))
+				frappe.db.sql(
+					f"DELETE FROM `{tenant_db}`.`{table_name}` "
+					f"WHERE `{parent_col}` IN ({placeholders})",
+					tuple(batch),
+				)
+				frappe.db.sql(
+					f"INSERT INTO `{tenant_db}`.`{table_name}` "
+					f"SELECT * FROM `{main_db}`.`{table_name}` "
+					f"WHERE `{parent_col}` IN ({placeholders})",
+					tuple(batch),
+				)
+		else:
+			# Root table (tabDocType) — full replace
+			frappe.db.sql(f"DELETE FROM `{tenant_db}`.`{table_name}`")
+			frappe.db.sql(
+				f"INSERT INTO `{tenant_db}`.`{table_name}` "
+				f"SELECT * FROM `{main_db}`.`{table_name}`"
+			)
+
+	frappe.db.commit()
+
+
+def _build_default_clause(default_value):
+	"""Build a DEFAULT clause from an information_schema COLUMN_DEFAULT value."""
+	if default_value is None:
+		return ""
+	# current_timestamp and similar expressions should not be quoted
+	if default_value.upper() in ("CURRENT_TIMESTAMP", "NULL"):
+		return f"DEFAULT {default_value}"
+	return f"DEFAULT '{default_value}'"
+
+
+def _sync_tables_postgres(main_db, schema_name):
+	"""Sync table structures from public schema to tenant schema (PostgreSQL).
+
+	Creates missing tables and adds missing columns.  Never drops data.
+	"""
+	# Get tables in public schema
+	main_tables = frappe.db.sql(
+		"SELECT tablename FROM pg_tables WHERE schemaname = 'public'",
+		as_list=True,
+	)
+
+	# Get existing tables in tenant schema
+	tenant_tables_result = frappe.db.sql(
+		"SELECT tablename FROM pg_tables WHERE schemaname = %s",
+		(schema_name,),
+		as_list=True,
+	)
+	existing = {r[0] for r in tenant_tables_result}
+
+	for (table_name,) in main_tables:
+		try:
+			if table_name not in existing:
+				frappe.db.sql_ddl(
+					f'CREATE TABLE IF NOT EXISTS "{schema_name}"."{table_name}" '
+					f'(LIKE "public"."{table_name}" INCLUDING ALL)'
+				)
+			else:
+				# Add missing columns
+				main_cols = frappe.db.sql(
+					"SELECT column_name, data_type, is_nullable, column_default "
+					"FROM information_schema.columns "
+					"WHERE table_schema = 'public' AND table_name = %s",
+					(table_name,),
+					as_dict=True,
+				)
+				tenant_cols = frappe.db.sql(
+					"SELECT column_name FROM information_schema.columns "
+					"WHERE table_schema = %s AND table_name = %s",
+					(schema_name, table_name),
+					as_dict=True,
+				)
+				existing_cols = {c["column_name"] for c in tenant_cols}
+				for c in main_cols:
+					if c["column_name"] not in existing_cols:
+						null_clause = "" if c["is_nullable"] == "YES" else "NOT NULL"
+						default_clause = f"DEFAULT {c['column_default']}" if c["column_default"] else ""
+						frappe.db.sql_ddl(
+							f'ALTER TABLE "{schema_name}"."{table_name}" '
+							f'ADD COLUMN "{c["column_name"]}" {c["data_type"]} '
+							f'{null_clause} {default_clause}'
+						)
+		except Exception as e:
+			click.secho(f"  Warning: could not sync table {table_name}: {e}", fg="yellow")
+
+	frappe.db.commit()
+
+
 def _update_site_config(site, updates):
 	"""Update site_config.json with the given key-value pairs."""
 	import os

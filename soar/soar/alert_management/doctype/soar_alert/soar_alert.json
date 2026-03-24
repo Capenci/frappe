@@ -10,7 +10,9 @@
   "column_break_header",
   "status",
   "severity",
-  "assigned_to",
+  "escalation_flow",
+  "escalated_to_role",
+  "escalation_level",
   "section_break_details",
   "description",
   "section_break_source",
@@ -30,10 +32,21 @@
   "evidence",
   "section_break_sla",
   "sla_policy",
-  "sla_response_deadline",
-  "column_break_sla",
-  "sla_resolution_deadline",
-  "sla_status"
+  "sla_status",
+  "column_break_sla_1",
+  "sla_response_status",
+  "sla_resolution_status",
+  "section_break_sla_times",
+  "sla_response_due",
+  "sla_resolution_due",
+  "column_break_sla_2",
+  "first_response_at",
+  "resolved_at",
+  "section_break_sla_pause",
+  "paused_since",
+  "total_paused_seconds",
+  "column_break_sla_3",
+  "reopen_count"
  ],
  "fields": [
   {
@@ -59,7 +72,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Status",
-   "options": "New\nTriaging\nIn Progress\nResolved\nClosed\nFalse Positive",
+   "options": "New\nTriaging\nIn Progress\nOn Hold\nResolved\nReopened\nClosed\nFalse Positive",
    "reqd": 1,
    "search_index": 1
   },
@@ -75,12 +88,29 @@
    "search_index": 1
   },
   {
-   "fieldname": "assigned_to",
+   "fieldname": "escalation_flow",
+   "fieldtype": "Link",
+   "label": "Escalation Flow",
+   "options": "SOAR Escalation Flow",
+   "description": "The escalation flow assigned to this ticket"
+  },
+  {
+   "fieldname": "escalated_to_role",
    "fieldtype": "Link",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Assigned To",
-   "options": "User"
+   "label": "Escalated To Role",
+   "options": "Role",
+   "read_only": 1,
+   "description": "Role this ticket is currently escalated to (set by escalation rules)"
+  },
+  {
+   "default": "0",
+   "fieldname": "escalation_level",
+   "fieldtype": "Int",
+   "label": "Escalation Level",
+   "read_only": 1,
+   "description": "Current level in the escalation flow (0 = not escalated)"
   },
   {
    "fieldname": "section_break_details",
@@ -189,26 +219,94 @@
    "read_only": 1
   },
   {
-   "fieldname": "sla_response_deadline",
-   "fieldtype": "Datetime",
-   "label": "Response Deadline",
-   "read_only": 1
+   "fieldname": "sla_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "SLA Status",
+   "options": "\nRunning\nPaused\nBreached\nCompleted",
+   "read_only": 1,
+   "search_index": 1
   },
   {
-   "fieldname": "column_break_sla",
+   "fieldname": "column_break_sla_1",
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "sla_resolution_deadline",
-   "fieldtype": "Datetime",
-   "label": "Resolution Deadline",
+   "fieldname": "sla_response_status",
+   "fieldtype": "Select",
+   "label": "Response SLA",
+   "options": "\nPending\nMet\nBreached",
    "read_only": 1
   },
   {
-   "fieldname": "sla_status",
+   "fieldname": "sla_resolution_status",
    "fieldtype": "Select",
-   "label": "SLA Status",
-   "options": "\nWithin SLA\nWarning\nBreached",
+   "label": "Resolution SLA",
+   "options": "\nPending\nMet\nBreached",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_sla_times",
+   "fieldtype": "Section Break",
+   "label": "SLA Deadlines"
+  },
+  {
+   "fieldname": "sla_response_due",
+   "fieldtype": "Datetime",
+   "label": "Response Due",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sla_resolution_due",
+   "fieldtype": "Datetime",
+   "label": "Resolution Due",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_sla_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "first_response_at",
+   "fieldtype": "Datetime",
+   "label": "First Response At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "resolved_at",
+   "fieldtype": "Datetime",
+   "label": "Resolved At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_sla_pause",
+   "fieldtype": "Section Break",
+   "label": "SLA Pause Tracking",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "paused_since",
+   "fieldtype": "Datetime",
+   "label": "Paused Since",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "total_paused_seconds",
+   "fieldtype": "Float",
+   "label": "Total Paused (seconds)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_sla_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "reopen_count",
+   "fieldtype": "Int",
+   "label": "Reopen Count",
    "read_only": 1
   }
  ],

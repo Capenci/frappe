@@ -11,6 +11,8 @@
   "tenant",
   "section_break_auth",
   "api_key",
+  "section_break_field_mappings",
+  "field_mappings",
   "section_break_mapping",
   "default_mapper",
   "section_break_defaults",
@@ -62,9 +64,22 @@
    "reqd": 1
   },
   {
+   "fieldname": "section_break_field_mappings",
+   "fieldtype": "Section Break",
+   "label": "Field Mappings",
+   "description": "Map each SOAR Alert field to a dot-notation path in the incoming raw_data. This table takes priority over the JSON Default Mapper below."
+  },
+  {
+   "fieldname": "field_mappings",
+   "fieldtype": "Table",
+   "label": "Field Mappings",
+   "options": "SOAR Webhook Mapper Row"
+  },
+  {
+   "collapsible": 1,
    "fieldname": "section_break_mapping",
    "fieldtype": "Section Break",
-   "label": "Field Mapping"
+   "label": "JSON Mapper (Advanced)"
   },
   {
    "description": "JSON object mapping SOAR Alert field names to dot-notation paths in the incoming raw_data.\nExample:\n{\n  \"title\": \"alert_name\",\n  \"severity\": \"priority\",\n  \"description\": \"details\",\n  \"source_ip\": \"network.src_ip\",\n  \"destination_ip\": \"network.dst_ip\",\n  \"alert_type\": \"category\",\n  \"source_reference\": \"event_id\",\n  \"severity_mapping\": {\n    \"1\": \"Critical\",\n    \"2\": \"High\",\n    \"3\": \"Medium\",\n    \"4\": \"Low\",\n    \"5\": \"Info\"\n  }\n}",

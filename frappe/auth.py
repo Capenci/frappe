@@ -261,18 +261,15 @@ class LoginManager:
 
 	def authenticate(self, user: str | None = None, pwd: str | None = None):
 		from frappe.core.doctype.user.user import User
-
 		if not (user and pwd):
 			user, pwd = frappe.form_dict.get("usr"), frappe.form_dict.get("pwd")
 		if not (user and pwd):
 			self.fail(_("Incomplete login details"), user=user)
-
 		if len(pwd) > MAX_PASSWORD_SIZE:
 			self.fail(_("Password size exceeded the maximum allowed size"), user=user)
 
 		_raw_user_name = user
 		user = User.find_by_credentials(user, pwd)
-
 		ip_tracker = get_login_attempt_tracker(frappe.local.request_ip)
 		if not user:
 			ip_tracker and ip_tracker.add_failure_attempt()

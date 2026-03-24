@@ -1,0 +1,48 @@
+{
+ "actions": [],
+ "creation": "2025-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "soar_field",
+  "raw_data_field",
+  "value_mapping"
+ ],
+ "fields": [
+  {
+   "fieldname": "soar_field",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "SOAR Alert Field",
+   "reqd": 1,
+   "description": "Field name on SOAR Alert (e.g. title, severity, source_ip, custom_threat_score)"
+  },
+  {
+   "fieldname": "raw_data_field",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Raw Data Field",
+   "reqd": 1,
+   "description": "Dot-notation path in raw_data (e.g. rule.description, network.src_ip)"
+  },
+  {
+   "fieldname": "value_mapping",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Value Mapping",
+   "description": "Optional JSON to translate values. Example: {\"1\": \"Critical\", \"2\": \"High\", \"3\": \"Medium\"}"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2025-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Alert Management",
+ "name": "SOAR Webhook Mapper Row",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

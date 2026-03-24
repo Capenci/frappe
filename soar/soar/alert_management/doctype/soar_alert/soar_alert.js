@@ -1,7 +1,8 @@
 frappe.ui.form.on("SOAR Alert", {
 	refresh(frm) {
 		// Status indicator
-		frm.page.set_indicator(frm.doc.status, soar.severity_colors[frm.doc.severity] || "grey");
+		const _colors = (typeof soar !== "undefined" && soar.severity_colors) || {};
+		frm.page.set_indicator(frm.doc.status, _colors[frm.doc.severity] || "grey");
 
 		// SLA indicator
 		if (frm.doc.sla_status === "Breached") {
@@ -15,6 +16,11 @@ frappe.ui.form.on("SOAR Alert", {
 		}
 
 		if (!frm.is_new()) {
+			// Escalate button
+			if (typeof soar !== "undefined" && soar.add_escalate_button) {
+				soar.add_escalate_button(frm);
+			}
+
 			// Add Evidence button
 			frm.add_custom_button(__("Add Evidence"), () => {
 				new frappe.ui.FileUploader({

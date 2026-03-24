@@ -209,6 +209,7 @@ class User(Document):
 		create_notification_settings(self.name)
 		frappe.cache.delete_key("users_for_mentions")
 		frappe.cache.delete_key("enabled_users")
+		self._sync_user_to_main_db()
 
 	def validate(self):
 		# clear new password
@@ -313,6 +314,7 @@ class User(Document):
 		frappe.clear_cache(user=self.name)
 		now = frappe.in_test or frappe.flags.in_install
 		self.send_password_notification(self.__new_password)
+		self._sync_user_to_main_db()
 		frappe.enqueue(
 			"frappe.core.doctype.user.user.create_contact",
 			user=self,
@@ -859,6 +861,129 @@ class User(Document):
 
 	def validate_ip_addr(self):
 		self.restrict_ip = ",".join(self.get_restricted_ip_list())
+
+	def _sync_user_to_main_db(self):
+		"""Sync user record and password to the main database when in a tenant context.
+
+		In a multi-tenant setup the DB may have been switched to a tenant
+		database/schema.  Authentication always runs against the *main* DB,
+		so newly created or updated users must also exist there.
+		"""
+		try:
+			from frappe.multi_tenancy.tenant_manager import (
+				get_current_tenant,
+				is_multi_tenancy_enabled,
+				main_db_context,
+			)
+		except ImportError:
+			return
+
+		if not is_multi_tenancy_enabled() or not get_current_tenant():
+			return
+
+		# Determine whether we are using database or schema isolation.
+		# Database isolation: frappe.local.main_db is a *separate* connection.
+		# Schema isolation:   frappe.local.tenant_schema is set (same conn).
+		has_separate_db = (
+			hasattr(frappe.local, "main_db")
+			and frappe.local.main_db is not frappe.local.db
+		)
+		has_schema = bool(getattr(frappe.local, "tenant_schema", None))
+
+		if not has_separate_db and not has_schema:
+			return
+
+		# ---- Step 1: read data from current (tenant) context ----
+		user_row = frappe.db.sql(
+			"SELECT * FROM `tabUser` WHERE `name` = %s", self.name, as_dict=True
+		)
+		if not user_row:
+			return
+		user_data = user_row[0]
+
+		auth_rows = frappe.db.sql(
+			"SELECT * FROM `__Auth` WHERE `doctype` = 'User' AND `name` = %s",
+			self.name,
+			as_dict=True,
+		)
+
+		role_rows = frappe.db.sql(
+			"SELECT * FROM `tabHas Role` WHERE `parent` = %s AND `parenttype` = 'User'",
+			self.name,
+			as_dict=True,
+		)
+
+		# ---- Step 2: write to main DB ----
+		if has_separate_db:
+			self._write_user_to_db(frappe.local.main_db, user_data, auth_rows, role_rows)
+		else:
+			with main_db_context() as db:
+				self._write_user_to_db(db, user_data, auth_rows, role_rows)
+
+	def _write_user_to_db(self, db, user_data, auth_rows, role_rows):
+		"""Write user record, password and roles to the given DB connection."""
+		try:
+			# ---- tabUser ----
+			existing = db.sql("SELECT `name` FROM `tabUser` WHERE `name` = %s", self.name)
+			if existing:
+				set_parts = []
+				values = []
+				for col, val in user_data.items():
+					if col == "name":
+						continue
+					set_parts.append(f"`{col}` = %s")
+					values.append(val)
+				values.append(self.name)
+				db.sql(
+					f"UPDATE `tabUser` SET {', '.join(set_parts)} WHERE `name` = %s",
+					tuple(values),
+				)
+			else:
+				cols = [f"`{c}`" for c in user_data]
+				placeholders = ["%s"] * len(user_data)
+				db.sql(
+					f"INSERT INTO `tabUser` ({', '.join(cols)}) VALUES ({', '.join(placeholders)})",
+					tuple(user_data.values()),
+				)
+
+			# ---- __Auth (password) ----
+			for auth in auth_rows:
+				ex_auth = db.sql(
+					"SELECT `name` FROM `__Auth` WHERE `doctype` = 'User' AND `name` = %s AND `fieldname` = %s",
+					(self.name, auth.fieldname),
+				)
+				if ex_auth:
+					db.sql(
+						"UPDATE `__Auth` SET `password` = %s, `encrypted` = %s "
+						"WHERE `doctype` = 'User' AND `name` = %s AND `fieldname` = %s",
+						(auth.password, auth.encrypted, self.name, auth.fieldname),
+					)
+				else:
+					db.sql(
+						"INSERT INTO `__Auth` (`doctype`, `name`, `fieldname`, `password`, `encrypted`) "
+						"VALUES (%s, %s, %s, %s, %s)",
+						("User", self.name, auth.fieldname, auth.password, auth.encrypted),
+					)
+
+			# ---- tabHas Role ----
+			db.sql(
+				"DELETE FROM `tabHas Role` WHERE `parent` = %s AND `parenttype` = 'User'",
+				self.name,
+			)
+			for role in role_rows:
+				cols = [f"`{c}`" for c in role]
+				placeholders = ["%s"] * len(role)
+				db.sql(
+					f"INSERT INTO `tabHas Role` ({', '.join(cols)}) VALUES ({', '.join(placeholders)})",
+					tuple(role.values()),
+				)
+
+			db.commit()
+		except Exception:
+			frappe.log_error(
+				title="Multi-tenancy: failed to sync user to main DB",
+				message=frappe.get_traceback(),
+			)
 
 
 @frappe.whitelist()

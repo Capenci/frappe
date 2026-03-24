@@ -50,7 +50,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Action Taken",
-   "options": "Allowed\nDenied\nEscalated\nAuto-Escalated"
+   "options": "Allowed\nDenied\nEscalated\nAuto-Escalated\nManual Escalation"
   },
   {
    "fieldname": "from_status",

@@ -264,7 +264,7 @@ def show_progress(docnames, message, i, description):
 	"v17",
 	"Unknown.",
 )
-def get_js(items):
+def get_js(items: str):
 	"""Load JS code files.  Will also append translations
 	and extend `frappe._messages`
 

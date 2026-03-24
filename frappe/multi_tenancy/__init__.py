@@ -23,13 +23,12 @@ def sync_all_tenant_schemas():
 	"""Sync all tenant schemas/databases from the main database.
 
 	This should be called after install_app or migrate to ensure that
-	all tenants receive the latest table structures and data (Desktop Icons,
-	Module Defs, Workspaces, Workspace Sidebars, DocType tables, etc.).
+	all tenants receive the latest table structures (columns, indexes).
 
-	For schema isolation tenants the function copies every table from
-	the main DB schema into each tenant's schema.
-	For database isolation tenants it does the same via a separate DB
-	connection.
+	IMPORTANT: This function only syncs schema (table structure). It does
+	NOT copy data from the main DB, so tenant-specific data is preserved.
+	For initial tenant setup (which copies structure + data), use the
+	``_install_schema_in_tenant_*`` helpers in commands.py instead.
 
 	The function is a no-op when multi-tenancy is not enabled.
 	"""
@@ -37,8 +36,8 @@ def sync_all_tenant_schemas():
 		return
 
 	from frappe.multi_tenancy.commands import (
-		_install_schema_in_tenant_db,
-		_install_schema_in_tenant_schema,
+		_sync_schema_in_tenant_db,
+		_sync_schema_in_tenant_schema,
 	)
 
 	# Query tenants from the main DB (ensure we're on the main schema)
@@ -61,10 +60,10 @@ def sync_all_tenant_schemas():
 			tenant_doc = frappe.get_doc("Tenant", tenant_name)
 			if tenant_doc.isolation_mode == "schema":
 				print(f"  Syncing schema for tenant '{tenant_name}'...")
-				_install_schema_in_tenant_schema(tenant_doc)
+				_sync_schema_in_tenant_schema(tenant_doc)
 			elif tenant_doc.isolation_mode == "database":
 				print(f"  Syncing database for tenant '{tenant_name}'...")
-				_install_schema_in_tenant_db(tenant_doc)
+				_sync_schema_in_tenant_db(tenant_doc)
 			print(f"  Tenant '{tenant_name}' synced successfully.")
 		except Exception as e:
 			print(f"  Warning: could not sync tenant '{tenant_name}': {e}")

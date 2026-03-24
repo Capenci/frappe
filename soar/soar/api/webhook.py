@@ -73,10 +73,13 @@ def ingest_alert():
     if not raw_data or not isinstance(raw_data, dict):
         frappe.throw(_("'raw_data' must be a non-empty JSON object"), frappe.ValidationError)
 
-    # --- mapper (request-level overrides config default) ---
+    # --- mapper (request body → child table → JSON fallback) ---
     mapper = data.get("mapper")
     if mapper and not isinstance(mapper, dict):
         frappe.throw(_("'mapper' must be a JSON object"), frappe.ValidationError)
+
+    if not mapper:
+        mapper = _build_mapper_from_table(config)
 
     if not mapper and config.default_mapper:
         try:
@@ -86,7 +89,6 @@ def ingest_alert():
 
     # --- build SOAR Alert values ---
     alert_values = _apply_mapper(raw_data, mapper, config)
-    print(alert_values)
     alert = frappe.get_doc(
         {
             "doctype": "SOAR Alert",
@@ -125,6 +127,42 @@ def _get_webhook_config(api_key: str, tenant: str):
         _("No active Webhook Config found for tenant '{0}' with the provided API key").format(tenant),
         frappe.AuthenticationError,
     )
+
+
+def _build_mapper_from_table(config) -> dict | None:
+    """Convert the SOAR Webhook Config child-table rows into a mapper dict.
+
+    Each row has:
+        - soar_field     → key in the mapper dict
+        - raw_data_field → dot-notation path (value in the mapper dict)
+        - value_mapping  → optional JSON translation dict
+
+    Returns None if the table is empty.
+    """
+    if not config.get("field_mappings"):
+        return None
+
+    mapper = {}
+    for row in config.field_mappings:
+        soar_field = (row.soar_field or "").strip()
+        raw_field = (row.raw_data_field or "").strip()
+        if not soar_field or not raw_field:
+            continue
+        mapper[soar_field] = raw_field
+
+        # Parse optional value_mapping JSON
+        if row.value_mapping and row.value_mapping.strip():
+            try:
+                val_map = json.loads(row.value_mapping)
+                if isinstance(val_map, dict):
+                    if soar_field == "severity":
+                        mapper.setdefault("severity_mapping", {}).update(val_map)
+                    else:
+                        mapper.setdefault("select_mappings", {})[soar_field] = val_map
+            except (json.JSONDecodeError, TypeError):
+                pass  # ignore invalid JSON in individual rows
+
+    return mapper if mapper else None
 
 
 def _resolve_dot_path(data: dict, path: str):

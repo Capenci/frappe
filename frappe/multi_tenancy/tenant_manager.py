@@ -298,8 +298,14 @@ def _get_tenant_for_domain(domain: str) -> str | None:
 def get_user_tenants(user: str) -> list[dict]:
 	"""Return list of tenants the user has access to.
 
+	For Administrator: returns ALL enabled tenants (admin has implicit access to every tenant).
+	For other users: returns tenants from the Tenant User table.
+
 	Returns: [{"tenant": "...", "title": "...", "is_default": 0/1, "roles": "..."}]
 	"""
+	if user == "Administrator":
+		return _get_all_tenants_for_admin()
+
 	def _fetch():
 		with main_db_context() as db:
 			return db.get_all(
@@ -323,6 +329,29 @@ def get_user_tenants(user: str) -> list[dict]:
 				})
 		except Exception:
 			continue
+	return result
+
+
+def _get_all_tenants_for_admin() -> list[dict]:
+	"""Return all enabled tenants for Administrator."""
+	def _fetch():
+		with main_db_context() as db:
+			return db.get_all(
+				"Tenant",
+				filters={"enabled": 1},
+				fields=["name", "title", "default_for_site"],
+			)
+
+	all_tenants = frappe.cache.get_value("all_tenants_for_admin", _fetch)
+
+	result = []
+	for t in all_tenants:
+		result.append({
+			"tenant": t["name"],
+			"title": t.get("title") or t["name"],
+			"is_default": t.get("default_for_site", 0),
+			"roles": "[]",
+		})
 	return result
 
 
